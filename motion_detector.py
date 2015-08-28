@@ -76,22 +76,24 @@ for raw_frame in camera.capture_continuous(rawCapture, format="bgr", use_video_p
         # compute contour bouding box and draw on frame
         (x,y,w,h) = cv2.boundingRect(c)
         cv2.rectangle(frame, (x,y), (x+w, y+h), (0, 255, 0), 2)
-        text = "Occupied"
+        text = "Wildlife detected"
 
-# draw text and timestamp on frame
-cv2.putText(frame, "Room status: {}".format(text), (10,20),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
-cv2.putText(frame, datetime.datetime.now().shrftime("%A $d %B %Y %I:%M:%S%p"),(10,frame.shape[0]-10),cv2.FONT_HERSHEY_SIMPLEX,0.35,(0,0,255),1)
+    # draw text and timestamp on frame
+    cv2.putText(frame, text, (10,20),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
+    cv2.putText(frame, timestamp.shrftime("%A %d %B %Y %I:%M:%S%p"),(10,frame.shape[0]-10),cv2.FONT_HERSHEY_SIMPLEX,0.35,(0,0,255),1)
 
-# show frame and record if user pressed key
-cv2.imshow("Security Feed",frame)
-cv2.imshow("Thresh",thresh)
-cv2.imshow("Frame Delta",frameDelta)
-key = cv2.waitKey(1) & 0xFF
+    # show frame and record if user pressed key
+    if conf["show_video"]:
+        cv2.imshow("Security Feed",frame)
+        cv2.imshow("Thresh",thresh)
+        cv2.imshow("Frame Delta",frameDelta)
+        key = cv2.waitKey(1) & 0xFF
 
-# quit if q pressed
-if key == ord("q"):
-    break
+        # quit if q pressed
+        if key == ord("q"):
+            break
 
-# cleanup
-camera.release()
+    # cleanup
+    rawCapture.truncate(0)
+
 cv2.destroyAllWindows()
