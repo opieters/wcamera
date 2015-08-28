@@ -1,0 +1,13 @@
+{
+    "show_video": true,
+    "min_motion_frames": 8,
+    "camera_warmup_time": 2.5,
+    "motion_threshold": 5,
+    "resolution": [640, 480],
+    "fps": 16,
+    "motion_min_area": 5000,
+    "detection_width": 500,
+    "motion_blur_kernel_size": [21,21],
+    "motion_blur_std_x": 0,
+    "motion_dection_average_weight": 0.5
+}
