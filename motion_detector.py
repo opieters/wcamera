@@ -15,7 +15,7 @@ import warnings
 parser = argparse.ArgumentParser()
 #parser.add_argument("-v", "--video", help="path to video file")
 #parser.add_argument("-a", "--min-area", type=int,default=500, help="minimum area size")
-parser.add_argument("-c","--conf",required=True,help="Path to json configuration file")
+parser.add_argument("-c","--conf",required=False,help="Path to json configuration file")
 
 # extract arguments
 args = vars(parser.parse_args())
@@ -24,7 +24,8 @@ args = vars(parser.parse_args())
 warnings.filterwarnings("ignore")
 
 # load configuration data from file
-conf = json.load(open(args["conf"]))
+#conf = json.load(open(args["conf"]))
+conf = json.load(open("conf.json"))
 
 # create camera object
 camera = PiCamera()
@@ -49,7 +50,7 @@ for raw_frame in camera.capture_continuous(rawCapture, format="bgr", use_video_p
 
     frame = imutils.resize(frame, width=conf["detection_width"]) # resize frame
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # convert to gray scale (gray frame)
-    gray = cv2.GaussianBlur(gray, tupel(conf["motion_blur_kernel_size"]), conf["motion_blur_std_x"]) # blur frame
+    gray = cv2.GaussianBlur(gray, tuple(conf["motion_blur_kernel_size"]), conf["motion_blur_std_x"]) # blur frame
 
     # init average frame
     if avg_frame is None:
@@ -60,17 +61,17 @@ for raw_frame in camera.capture_continuous(rawCapture, format="bgr", use_video_p
 
     cv2.accumulateWeighted(gray, avg_frame, conf["motion_dection_average_weight"])
 
-    frame_diff = cv2.absdiff(gray, cv2.convertScaleAbs(avg))
+    frame_diff = cv2.absdiff(gray, cv2.convertScaleAbs(avg_frame))
     frame_thr = cv2.threshold(frame_diff, conf["motion_threshold"], 255, cv2.THRESH_BINARY)[1]
 
     # fill holes (dilate) in image and find countours on threshold image
     frame_thr = cv2.dilate(frame_thr, None, iterations=2)
-    (cnts,_) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    (cnts,_) = cv2.findContours(frame_thr.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # loop over contours
     for c in cnts:
         # ignore contour if too small
-        if cv2.contourArea(c) < args["min_area"]:
+        if cv2.contourArea(c) < conf["motion_min_area"]:
             continue
 
         # compute contour bouding box and draw on frame
@@ -80,13 +81,13 @@ for raw_frame in camera.capture_continuous(rawCapture, format="bgr", use_video_p
 
     # draw text and timestamp on frame
     cv2.putText(frame, text, (10,20),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),2)
-    cv2.putText(frame, timestamp.shrftime("%A %d %B %Y %I:%M:%S%p"),(10,frame.shape[0]-10),cv2.FONT_HERSHEY_SIMPLEX,0.35,(0,0,255),1)
+    cv2.putText(frame, timestamp.strftime("%A %d %B %Y %I:%M:%S%p"),(10,frame.shape[0]-10),cv2.FONT_HERSHEY_SIMPLEX,0.35,(0,0,255),1)
 
     # show frame and record if user pressed key
     if conf["show_video"]:
         cv2.imshow("Security Feed",frame)
-        cv2.imshow("Thresh",thresh)
-        cv2.imshow("Frame Delta",frameDelta)
+        cv2.imshow("Thresh",frame_thr)
+        cv2.imshow("Frame Delta",frame_diff)
         key = cv2.waitKey(1) & 0xFF
 
         # quit if q pressed
