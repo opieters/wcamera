@@ -5,7 +5,7 @@
     "motion_threshold": 5,
     "resolution": [640, 480],
     "fps": 16,
-    "motion_min_area": 5000,
+    "motion_min_area": 500,
     "detection_width": 500,
     "motion_blur_kernel_size": [21,21],
     "motion_blur_std_x": 0,
