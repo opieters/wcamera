@@ -17,7 +17,7 @@ def PIR_no_motion():
     threading.Timer(10, stop_if_no_motion).start()
 
 def stop_if_no_motion():
-    if not motion:
+    if (not motion) and recording:
         camera.stop_recording()
         recording = False
 
