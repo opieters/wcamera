@@ -5,15 +5,21 @@ import threading
 
 def PIR_motion_detected():
     print("Motion detected")
-    camera.start_recording("myvideo.h264")
+    recording = True
+    motion = True
+    if not recording:
+        camera.start_recording("myvideo.h264")
+
 
 def PIR_no_motion():
     print("No motion")
+    motion = False
     threading.Timer(10, stop_if_no_motion).start()
 
 def stop_if_no_motion():
-    if no_motion:
+    if not motion:
         camera.stop_recording()
+        recording = False
 
 def PIR_edge(pin):
     if GPIO.input(pin): # rising
@@ -34,6 +40,9 @@ GPIO.setup(PIR_pin,GPIO.IN)
 # camera
 camera = picamera.PiCamera()
 camera.resolution = (640, 480)
+
+# motion variable
+motion = False
 
 try:
     print("Press CTRL-C to exit script")
