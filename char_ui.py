@@ -19,14 +19,8 @@ lcd.create_char(6, [2, 6, 10, 18, 10, 6, 2, 0])
 lcd.create_char(7, [31, 17, 21, 21, 21, 21, 17, 31])
 
 
-lcd.set_color(0.0, 0.0, 1.0)
+lcd.set_color(1.0, 1.0, 1.0)
 lcd.clear()
-lcd.message('BLUE \x03')
-time.sleep(3.0)
-
-# Show button state.
-lcd.clear()
-lcd.message('Press buttons...')
 
 # Make list of button value, text, and backlight color.
 buttons = ( (LCD.SELECT, 'Select', (1,1,1)),
@@ -36,15 +30,24 @@ buttons = ( (LCD.SELECT, 'Select', (1,1,1)),
             (LCD.RIGHT,  'Right' , (1,0,1)) )
 
 lcd.message("Please wait...")
+time.sleep(1)
 
 def select_lcd_list(display, entries):
     pos = 0
-    lcd.message(entries[pos])
+    display.clear()
+    display.message(entries[pos])
     while not lcd.is_pressed(LCD.SELECT):
         if display.is_pressed(LCD.UP):
             pos = (pos - 1) % len(entries)
+            display.clear()
+            display.message(entries[pos])
+            time.sleep(0.2)
         if display.is_pressed(LCD.DOWN):
             pos = (pos + 1 ) % len(entries)
+            display.clear()
+            display.message(entries[pos])
+            time.sleep(0.2)
+    time.sleep(0.2)
     return pos
 
 def main_menu():
@@ -54,9 +57,17 @@ def main_menu():
     return menu_call[selected_entry]
 
 def record_menu():
-    menu_text = ("Record", "Settings", "USB", "Display", "Shut down")
-    menu_call = (record_menu, settings_menu, usb_menu, display_menu, shut_down_menu)
+    menu_text = ("Start PIR rec", "Start video rec", "Back")
+    menu_call = (main_menu, main_menu, main_menu)
     selected_entry = select_lcd_list(lcd, menu_text)
+    if selected_entry == 0:
+        print("[INFO] Starting PIR recording")
+        print("[INFO] Duration: %d seconds" % duration)
+        #start_pir(duartion)
+    elif selected_entry == 1:
+        print("[INFO] Starting video recording")
+        print("[INFO] Duartion: %d seconds" % duartion)
+        #start_video(duartion)
     return menu_call[selected_entry]
 
 def settings_menu():
