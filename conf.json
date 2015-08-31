@@ -3,11 +3,16 @@
     "min_motion_frames": 8,
     "camera_warmup_time": 2.5,
     "motion_threshold": 5,
+    "detection resolution": [640, 480],
+    "record video": true,
     "resolution": [640, 480],
     "fps": 16,
     "motion_min_area": 500,
     "detection_width": 500,
     "motion_blur_kernel_size": [21,21],
     "motion_blur_std_x": 0,
-    "motion_dection_average_weight": 0.5
+    "motion_dection_average_weight": 0.5,
+    "duration": 0,
+    "PIR GPIO pin": 26,
+    "stop detection GPIO pin": -1
 }
