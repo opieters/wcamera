@@ -10,11 +10,12 @@ import Adafruit_CharLCD as LCD
 lcd = LCD.Adafruit_CharLCDPlate()
 
 # create some custom characters
-lcd.create_char(1, [2, 3, 2, 2, 14, 30, 12, 0])
-lcd.create_char(2, [0, 1, 3, 22, 28, 8, 0, 0])
-lcd.create_char(3, [0, 14, 21, 23, 17, 14, 0, 0])
-lcd.create_char(4, [31, 17, 10, 4, 10, 17, 31, 0])
-lcd.create_char(5, [8, 12, 10, 9, 10, 12, 8, 0])
+#lcd.create_char(1, [2, 3, 2, 2, 14, 30, 12, 0])
+lcd.create_char(1, [0,8,12,14,12,8,0,0]) # arrow to right
+lcd.create_char(2, [	0,2,6,14,6,2,0,0]) # arrowhead to left
+lcd.create_char(3, [0,0,4,14,31,0,0,0]) # arrowhead up
+lcd.create_char(4, [0,0,31,14,4,0,0,0]) # arrowhead down
+lcd.create_char(5, [	0,14,31,27,31,14,0,0]) # select
 lcd.create_char(6, [2, 6, 10, 18, 10, 6, 2, 0])
 lcd.create_char(7, [31, 17, 21, 21, 21, 21, 17, 31])
 
@@ -36,11 +37,11 @@ def select_lcd_list(display, entries):
     pos = 0
     display.clear()
     display.message(entries[pos])
-    while not lcd.is_pres ArithmeticErrorsed(LCD.SELECT):
+    while not lcd.is_pressed(LCD.SELECT):
         if display.is_pressed(LCD.UP):
             pos = (pos - 1) % len(entries)
             display.clear()
-            display.message(entries[pos])
+            display.message(entries[pos] + "\n\x03 \x04 \x05")
             time.sleep(0.2)
         if display.is_pressed(LCD.DOWN):
             pos = (pos + 1 ) % len(entries)
@@ -51,7 +52,7 @@ def select_lcd_list(display, entries):
     return pos
 
 def main_menu():
-    menu_text = ("Record", "Settings", "USB", "Display", "Shut down")
+    menu_text = ("Record", "Settings", "USB\x01\x02\x03\x04\x05\x06\x07", "Display", "Shut down")
     menu_call = (record_menu, settings_menu, usb_menu, display_menu, shut_down_menu)
     selected_entry = select_lcd_list(lcd, menu_text)
     return menu_call[selected_entry]
