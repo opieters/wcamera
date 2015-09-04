@@ -36,7 +36,7 @@ def select_lcd_list(display, entries):
     pos = 0
     display.clear()
     display.message(entries[pos])
-    while not lcd.is_pressed(LCD.SELECT):
+    while not lcd.is_pres ArithmeticErrorsed(LCD.SELECT):
         if display.is_pressed(LCD.UP):
             pos = (pos - 1) % len(entries)
             display.clear()
@@ -63,7 +63,7 @@ def record_menu():
     if selected_entry == 0:
         print("[INFO] Starting PIR recording")
         print("[INFO] Duration: %d seconds" % duration)
-        #start_pir(duartion)
+        start_pir(duartion)
     elif selected_entry == 1:
         print("[INFO] Starting video recording")
         print("[INFO] Duartion: %d seconds" % duartion)
@@ -71,10 +71,23 @@ def record_menu():
     return menu_call[selected_entry]
 
 def settings_menu():
-    menu_text = ("Back")
-    menu_call = (main_menu)
+    menu_text = ("Detection", "USB", "WiFi", "Update", "Back")
+    menu_call = (edit_detection_settings_menu, edit_usb_settigs_menu, update_menu, main_menu)
     selected_entry = select_lcd_list(lcd, menu_text)
     return menu_call[selected_entry]
+
+def update_menu():
+    menu_text = ("(W)LAN update", "USB update", "Back")
+    menu_call = (wifi_update, usb_update, settings_menu)
+    selected_entry = select_lcd_list(lcd, menu_text)
+    return menu_call[selected_entry]
+
+def lan_update():
+    print("[INFO] Updating via (W)LAN...")
+    #TODO
+
+def usb_update():
+    print("[INFO] Updating via USB...")
 
 def usb_menu():
     menu_text = ("Back")

@@ -46,9 +46,6 @@ avg_frame = None
 
 stop_recording = False
 
-def gpio_event:
-
-
 def stop_recording_callback(pin):
     stop_recording = True
 
