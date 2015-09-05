@@ -10,25 +10,36 @@ import Adafruit_CharLCD as LCD
 lcd = LCD.Adafruit_CharLCDPlate()
 
 # create some custom characters
-#lcd.create_char(1, [2, 3, 2, 2, 14, 30, 12, 0])
-lcd.create_char(1, [0,8,12,14,12,8,0,0]) # arrow to right
-lcd.create_char(2, [	0,2,6,14,6,2,0,0]) # arrowhead to left
-lcd.create_char(3, [0,0,4,14,31,0,0,0]) # arrowhead up
-lcd.create_char(4, [0,0,31,14,4,0,0,0]) # arrowhead down
-lcd.create_char(5, [	0,14,31,27,31,14,0,0]) # select
-lcd.create_char(6, [2, 6, 10, 18, 10, 6, 2, 0])
-lcd.create_char(7, [31, 17, 21, 21, 21, 21, 17, 31])
-
+lcd.create_char(1, [0, 8,12,14,12, 8, 0, 0]) # arrow to right
+lcd.create_char(2, [0, 2, 6,14, 6, 2, 0, 0]) # arrowhead to left
+lcd.create_char(3, [0, 0, 4,14,31, 0, 0, 0]) # arrowhead up
+lcd.create_char(4, [0, 0,31,14, 4, 0, 0, 0]) # arrowhead down
+lcd.create_char(5, [0,14,31,27,31,14, 0, 0]) # select
 
 lcd.set_color(1.0, 1.0, 1.0)
 lcd.clear()
+lcd.autoscroll(True)
+
+conf_file = "conf.json"
 
 # Make list of button value, text, and backlight color.
-buttons = ( (LCD.SELECT, 'Select', (1,1,1)),
-            (LCD.LEFT,   'Left'  , (1,0,0)),
-            (LCD.UP,     'Up'    , (0,0,1)),
-            (LCD.DOWN,   'Down'  , (0,1,0)),
-            (LCD.RIGHT,  'Right' , (1,0,1)) )
+custom_chars = { "SELECT": [ 0, 8,12,14,12, 8, 0, 0],
+                 "LEFT":   [ 0, 2, 6,14, 6, 2, 0, 0],
+                 "UP":     [ 0, 0, 4,14,31, 0, 0, 0],
+                 "DOWN":   [ 0, 0,31,14, 4, 0, 0, 0],
+                 "RIGHT":  [ 0,14,31,27,31,14, 0, 0],
+                 "PM":     [ 4, 4,31, 4, 4, 0,31, 0] }
+n_chars = define_new_chars(custom_chars,lcd)
+
+def define_new_chars(new_chars,lcd):
+    counter = 0
+    mapping = {}
+    for key in new_chars:
+        counter+=1
+        mapping[key] = counter
+        lcd.create_char(counter,new_chars[key])
+    return mapping
+
 
 lcd.message("Please wait...")
 time.sleep(1)
@@ -37,16 +48,17 @@ def select_lcd_list(display, entries):
     pos = 0
     display.clear()
     display.message(entries[pos])
+    controls = "\x0%d \x0%d \x0%d" % (n_chars["UP"], n_chars["DOWN"], n_chars["SELECT"])
     while not lcd.is_pressed(LCD.SELECT):
         if display.is_pressed(LCD.UP):
             pos = (pos - 1) % len(entries)
             display.clear()
-            display.message(entries[pos] + "\n\x03 \x04 \x05")
+            display.message(entries[pos] + "\n" + controls)
             time.sleep(0.2)
         if display.is_pressed(LCD.DOWN):
             pos = (pos + 1 ) % len(entries)
             display.clear()
-            display.message(entries[pos])
+            display.message(entries[pos] + "\n" + controls)
             time.sleep(0.2)
     time.sleep(0.2)
     return pos
@@ -82,6 +94,131 @@ def update_menu():
     menu_call = (wifi_update, usb_update, settings_menu)
     selected_entry = select_lcd_list(lcd, menu_text)
     return menu_call[selected_entry]
+
+def edit_detection_settings_menu():
+    # load configuration file
+    conf = json.load(open(conf_file))
+    keys_text = tuple([k for k in conf] + ["Back"])
+
+    # initial loop over entries
+    edit_key = select_lcd_list(lcd, keys_text)
+    while keys_text[edit_key] != "Back":
+        cursor = 0 # cursor default position
+        data = conf[keys_text[edit_key]] # extract data
+
+        # show blinking cursor
+        lcd.show_cursor(True)
+        lcd.blink(True)
+
+        # string data
+        if type(data) is string:
+
+            # string edit options
+            min_char_value = 32
+            max_char_value = 126
+
+            # help string with controls
+            controls = "\x0%d\x0%d\x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"],
+            n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+
+            # wait for select (=OK) signal
+            while not lcd.is_pressed(LCD.SELECT):
+                # change character
+                if lcd.is_pressed(LCD.UP):
+                    if ord(data[cursor]) < max_char_value:
+                        data[cursor] = chr(ord(data[cursor]) + 1)
+                    else:
+                        data[cursor] = min_char_value
+                        lcd.clear()
+                        lcd.message(data + "\n" + controls)
+                    time.sleep(0.2)
+                if lcd.is_pressed(LCD.DOWN):
+                    if ord(data[cursor]) > min_char_value:
+                        data[cursor] = chr(ord(data[cursor]) - 1)
+                    else:
+                        data[cursor] = max_char_value
+                    time.sleep(0.2)
+                # change cursor position
+                if lcd.is_pressed(LCD.RIGHT):
+                    cursor += 1
+                    # if cursor moves out of string -> insert new character
+                    if cursor >= len(data)
+                        data += " "
+                    lcd.set_cursor(cursor,0)
+                    time.sleep(0.2)
+                if lcd.is_pressed(LCD.LEFT):
+                    if cursor > 0:
+                        cursor -= 1
+                        lcd.set_cursor(cursor,0)
+                    time.sleep(0.2)
+            data = data.strip() # remove redundant whitespace
+            time.sleep(0.2)
+
+        # bool data
+        if type(data) is bool:
+            controls = "\x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"],
+            n_chars["SELECT"])
+
+            # wait for select
+            while not lcd.is_pressed(LCD.SELECT):
+                if lcd.is_pressed(LCD.UP) or lcd.is_pressed(LCD.DOWN):
+                    data = not data
+                    time.sleep(0.2)
+            time.sleep(0.2)
+
+        # numerical type (float or int)
+        if type(data) is int or type(data) is float:
+            # define type specific options and help string (indicates step size!)
+            if type(data) is float:
+                step = 1.0
+                controls = "\x0%d\x0%d\x0%d%f \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+            else:
+                step = 1
+                controls = "\x0%d\x0%d\x0%d%d \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+
+            # wait for select
+            while not lcd.is_pressed(LCD.SELECT):
+                # change value by step size
+                if lcd.is_pressed(LCD.UP):
+                    data += step
+                    lcd.clear()
+                    lcd.message(str(data) + "\n" + controls)
+                    time.sleep(0.2)
+                if lcd.is_pressed(LCD.DOWN):
+                    data -= step
+                    lcd.clear()
+                    lcd.message(str(data) + "\n" + controls)
+                    time.sleep(0.2)
+
+                # change step size (and update `controls`)
+                if lcd.is_pressed(LCD.RIGHT):
+                    step /= 10
+                    if type(data) is int:
+                        step = max(step,1)
+                        controls = "\x0%d\x0%d\x0%d%d \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                    else:
+                        controls = "\x0%d\x0%d\x0%d%f \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                    lcd.clear()
+                    lcd.message(str(data) + "\n" + controls)
+                    time.sleep(0.2)
+                if lcd.is_pressed(LCD.LEFT):
+                    step *=10
+                    if type(data) is int:
+                        controls = "\x0%d\x0%d\x0%d%d \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                    else:
+                        controls = "\x0%d\x0%d\x0%d%f \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                    lcd.clear()
+                    lcd.message(str(data) + "\n" + controls)
+                    time.sleep(0.2)
+            time.sleep(0.2)
+
+        # hide cursor in other menus
+        lcd.show_cursor(False)
+
+        # get new edit entry
+        edit_key = select_lcd_list(lcd, keys_text)
+    return settings_menu
+
 
 def lan_update():
     print("[INFO] Updating via (W)LAN...")
