@@ -20,37 +20,45 @@ if __name__ == '__main__':
 
     # extract arguments
     args = vars(parser.parse_args())
-    conf_file = args["conf"]
+    init(args["conf"])
 
-else:
-    conf_file = "conf.json"
 
-# filter warnings
-warnings.filterwarnings("ignore")
-
-# load configuration data from file
-conf = json.load(open(conf_file))
-
-# create camera object
-camera = PiCamera()
-
-# configure camera
-camera.resolution = tuple(conf["detection resolution"])
-camera.framerate = conf["fps"]
-rawCapture = PiRGBArray(camera, size=tuple(conf["resolution"]))
-
-# warming up camera
-print "[INFO] warming up..."
-time.sleep(conf["camera_warmup_time"])
-avg_frame = None
-
+# global objects
+conf = None
+camera = None
 stop_recording = False
+
+def init(conf_file="conf.json"):
+    # filter warnings
+    warnings.filterwarnings("ignore")
+
+    # load configuration data from file
+    conf = json.load(open(conf_file))
+
+    # create and configure camera object
+    camera = PiCamera()
+    camera.resolution = tuple(conf["detection resolution"])
+    camera.framerate = conf["fps"]
+
+    stop_recording = False
+
+def delete():
+    camera = None
+    cv2.destroyAllWindows()
+    GPIO.cleanup()
 
 def stop_recording_callback(pin):
     stop_recording = True
 
 def run():
     """TODO"""
+
+    # warming up camera
+    print "[INFO] warming up..."
+    time.sleep(conf["camera_warmup_time"])
+    avg_frame = None
+
+    rawCapture = PiRGBArray(camera, size=tuple(conf["resolution"]))
 
     # limit recording duration if needed
     if conf["duration"] > 0:
@@ -126,8 +134,3 @@ def run():
             rawCapture.truncate(0)
     except KeyboardInterrupt or stop_recording:
         print("[INFO] Motion detection stopped.")
-        cleanup()
-
-def cleanup():
-    cv2.destroyAllWindows()
-    GPIO.cleanup()

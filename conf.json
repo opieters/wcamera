@@ -14,5 +14,6 @@
     "motion_dection_average_weight": 0.5,
     "duration": 0,
     "PIR GPIO pin": 26,
-    "stop detection GPIO pin": -1
+    "stop detection GPIO pin": -1,
+    "camera LED": false
 }

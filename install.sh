@@ -6,7 +6,7 @@ sudo apt-get update
 sudo apt-get install python-dev -y # -y installs missing headers
 sudo apt-get install libopencv-dev python-opencv python-smbus i2c-tools # open cv + python bindings + i2c x
 sudo apt-get install python-pip
-sudo pip install RPi.GPIO
+sudo pip install RPi.GPIO imutils
 echo "[INFO] Downloading Adafruit Char LCD shield software"
 rm -rf Adafruit_Python_CharLCD
 git clone https://github.com/adafruit/Adafruit_Python_CharLCD.git

@@ -1,8 +1,8 @@
 import RPi.GPIO as GPIO
 import time, datetime, json
-from picamera import PiCamera
-from threading import Timer
-from argparse import ArgumentParser
+import picamera import PiCamera
+import threading import Timer
+import argparse import ArgumentParser
 
 """PIR implements motion detection based on the readouts from a PIR sensor.
 
@@ -25,20 +25,29 @@ if __name__ == '__main__':
 
     args = vars(parser.parse_args())
     conf_file = args["conf"]
-else:
-    conf_file = "conf.json"
 
-conf = json.load(open(conf_file))
+    init(conf_file)
 
 # camera
-camera = PiCamera()
-camera.resolution = tuple(conf["resolution"])
+camera = None
 
 # motion variable
 motion = False
 
 # duration variable
 run_complete = False
+
+def init(conf_file="conf.json"):
+    conf = json.load(open(conf_file))
+    camera = PiCamera()
+    camera.resolution = tuple(conf["resolution"])
+    motion = False
+    run_complete = False
+    camera.led = conf["camera LED"]
+
+def delete():
+    camera = None
+    GPIO.cleanup()
 
 def motion_detected(video_name):
     """Callback if motion is detected. A video will be created with name
@@ -92,4 +101,3 @@ def run():
             time.sleep(100)
     except KeyboardInterrupt or run_complete:
         print("[INFO] Motion detection ended. Cleaning and returning to menu.")
-        GPIO.cleanup()
