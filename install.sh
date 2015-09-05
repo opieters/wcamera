@@ -9,7 +9,7 @@ sudo apt-get install python-pip
 sudo pip install RPi.GPIO imutils
 echo "Attempting to automatically enable i2c"
 
-if [-f /etc/modprobe.d/raspi-blacklist.conf]; then
+if [ -f /etc/modprobe.d/raspi-blacklist.conf ]; then
     declare -a content=("i2c-bcm2708" "i2c-dev" "blacklist spi-bcm2708" "blacklist i2c-bcm2708" "dtparam=i2c1=on" "dtparam=i2c_arm=on")
     declare -a files=("/etc/modules" "/etc/modules" "/etc/modprobe.d/raspi-blacklist.conf" "/etc/modprobe.d/raspi-blacklist.conf" "/boot/config.txt" "/boot/config.txt")
 else
@@ -17,11 +17,13 @@ else
     declare -a files=("/etc/modules" "/etc/modules" "/boot/config.txt" "/boot/config.txt")
 fi
 
-for i in `seq 1 10`;
+l=${#content[@]}
+
+for (( i=0; i<${l}; i++));
 do
     EXPR="${content[$i]}"
-    FILE="${content[$i]}"
-    if [! grep -Fxq "$EXPR" $FILE]; then
+    FILE="${files[$i]}"
+    if ! grep -Fxq "$EXPR" $FILE ; then
         sudo cat "$EXPR" >> "$FILE"
     fi
 done
