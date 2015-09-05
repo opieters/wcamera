@@ -13,7 +13,7 @@ import warnings
 import RPi.GPIO as GPIO
 import threading
 
-if name == '__main__':
+if __name__ == '__main__':
     # configure argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--conf", required=False, help="Path to json configuration file", default="conf.json")
@@ -49,7 +49,7 @@ stop_recording = False
 def stop_recording_callback(pin):
     stop_recording = True
 
-def run:
+def run():
     """TODO"""
 
     # limit recording duration if needed
@@ -59,7 +59,7 @@ def run:
         stop_recording = False
 
     # setup GPIO pin to stop run on event
-    if conf["stop detection GPIO pin"] >= 0
+    if conf["stop detection GPIO pin"] >= 0:
         GPIO.setup(conf["stop detection GPIO pin", GPIO.IN])
         GPIO.add_event_detect(conf["stop detection GPIO pin"], GPIO.BOTH, callback=stop_recording_callback)
 
@@ -124,10 +124,10 @@ def run:
 
             # cleanup
             rawCapture.truncate(0)
-        except KeyboardInterrupt or stop_recording:
-            print("[INFO] Motion detection stopped.")
-            cleanup()
+    except KeyboardInterrupt or stop_recording:
+        print("[INFO] Motion detection stopped.")
+        cleanup()
 
-def cleanup:
+def cleanup():
     cv2.destroyAllWindows()
     GPIO.cleanup()

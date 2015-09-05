@@ -1,8 +1,8 @@
 import RPi.GPIO as GPIO
 import time, datetime, json
-import picamera import PiCamera
-import threading import Timer
-import argparse import ArgumentParser
+from picamera import PiCamera
+from threading import Timer
+from argparse import ArgumentParser
 
 """PIR implements motion detection based on the readouts from a PIR sensor.
 
