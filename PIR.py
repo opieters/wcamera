@@ -19,16 +19,8 @@ Other global paramters are:
 Note: do not load with the `from ... import *` syntax to avoid naming conflicts.
 """
 
-# camera
-camera = None
-
-# motion variable
-motion = False
-
-# duration variable
-run_complete = False
-
 def init(conf_file="conf.json"):
+    global conf, camera, run_complete, motion
     conf = json.load(open(conf_file))
     camera = PiCamera()
     camera.resolution = tuple(conf["resolution"])
@@ -37,13 +29,21 @@ def init(conf_file="conf.json"):
     camera.led = conf["camera LED"]
 
 def delete():
-    camera = None
+    global camera, run_timer, motion_timer
+    del camera
+    if 'run_timer' in globals():
+        run_timer.cancel()
+        run_timer.join()
+    if 'motion_timer' in globals():
+        motion_timer.cancel()
+        motion_timer.join()
     GPIO.cleanup()
 
 def motion_detected(video_name):
     """Callback if motion is detected. A video will be created with name
     `video_name`."""
     print("[INFO] Motion detected")
+    global recording, motion
     recording = True
     motion = True
     if not recording:
@@ -53,11 +53,13 @@ def motion_detected(video_name):
 def no_motion():
     """Callback if motion ended."""
     print("[INFO] Motion ended")
+    global motion, motion_timer
     motion = False
-    threading.Timer(10, stop_recording).start()
+    motion_timer = threading.Timer(10, stop_recording).start()
 
 def stop_recording():
     """Stops camera recording (if in progress)."""
+    global camera, recording
     if (not motion) and recording:
         camera.stop_recording()
         recording = False
@@ -69,16 +71,20 @@ def gpio_event(pin):
     else: # falling
         no_motion()
 
-def run_timer_callback(pin):
+def run_timer_callback():
     """Callback to end motion detection after `conf["duration"]` seconds"""
+    global run_complete
     run_complete = True
+    print("[INFO] Run timer callback: stop recording")
 
 def run():
     """Perform motion detecton."""
+    global run_complete, run_timer
     GPIO.setup(conf["PIR GPIO pin"], GPIO.IN) # register GPIO pin
     run_complete = False # run flag
     if conf["duration"] > 0: # stop recording after specified time
-        Timer(conf["duration"], run_timer_callback).start()
+        run_timer = Timer(conf["duration"], run_timer_callback)
+        run_timer.start()
     else:
         run_complete = False
     try:
@@ -86,11 +92,12 @@ def run():
         time.sleep(1)
         GPIO.add_event_detect(conf["PIR GPIO pin"], GPIO.BOTH, callback=gpio_event)
         if conf["stop detection GPIO pin"] >= 0:
+            print("[INFO] Detection GPIO pin active")
             GPIO.setup(conf["stop detection GPIO pin"], GPIO.IN)
             GPIO.add_event_detect(conf["stop detection GPIO pin"], GPIO.BOTH, callback=run_timer_callback)
-        while 1:
-            time.sleep(100)
-    except KeyboardInterrupt or run_complete:
+        while not run_complete:
+            time.sleep(1)
+    except KeyboardInterrupt :
         print("[INFO] Motion detection ended. Cleaning and returning to menu.")
 
 if __name__ == '__main__':

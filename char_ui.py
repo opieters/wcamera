@@ -25,12 +25,9 @@ lcd.clear()
 conf_file = "conf.json"
 
 # Make list of button value, text, and backlight color.
-lcd.create_char(1, [ 0,14,31,31,31,14, 0, 0]) # SELECT
-lcd.create_char(2, [ 0, 2, 6,14, 6, 2, 0, 0]) # LEFT
-lcd.create_char(3, [ 0, 8,12,14,12, 8, 0, 0]) # RIGHT
-lcd.create_char(4, [ 0, 0, 4,14,31, 0, 0, 0]) # UP
-lcd.create_char(5, [ 0, 0,31,14, 4, 0, 0, 0]) # DOWN
-lcd.create_char(6, [ 4, 4,31, 4, 4, 0,31, 0]) # PM
+lcd.create_char(1, [ 0, 4, 0,21, 0, 4, 0, 0]) # ALL CONTROLS (SMALL)
+lcd.create_char(2, [ 0, 4, 0, 4, 0, 4, 0, 0]) # only up/down/select
+lcd.create_char(3, [ 4, 4,31, 4, 4, 0,31, 0]) # PM
 
 
 
@@ -41,7 +38,7 @@ time.sleep(1)
 
 def select_lcd_list(display, entries):
     pos = 0
-    controls = "\x04 \x05 \x01"
+    controls = "\x02"
     display.clear()
     display.message(entries[pos] + "\n" + controls)
     while not lcd.is_pressed(LCD.SELECT):
@@ -70,11 +67,12 @@ def record_menu():
     selected_entry = select_lcd_list(lcd, menu_text)
     if selected_entry == 0:
         print("[INFO] Starting PIR recording")
-        print("[INFO] Duration: %d seconds" % duration)
-        start_pir(duartion)
+        PIR.init()
+        PIR.run()
+        print("[INFO] Deleting objects")
+        PIR.delete()
     elif selected_entry == 1:
         print("[INFO] Starting video recording")
-        print("[INFO] Duartion: %d seconds" % duartion)
         #start_video(duartion)
     return menu_call[selected_entry]
 
@@ -100,23 +98,64 @@ def edit_detection_settings_menu():
 
     # initial loop over entries
     edit_key = select_lcd_list(lcd, keys_text)
+    
     while keys_text[edit_key] != "Back":
         cursor = 0 # cursor default position
         data = conf[keys_text[edit_key]] # extract data
 
-        # show blinking cursor
-        lcd.show_cursor(True)
-        lcd.blink(True)
+        # list type
+        if type(data) is list:
+            # display cursor
+            lcd.show_cursor(True)
+
+            # display initial data
+            lcd.clear()
+            lcd.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
+
+            # wait for select (=OK) signal
+            while not lcd.is_pressed(LCD.SELECT):
+                # change character
+                if lcd.is_pressed(LCD.UP):
+                    data[cursor] += 1
+                    lcd.clear()
+                    lcd.message(str(data) + '\n\x01 Edit: ' + str(data[cursor])) 
+                    time.sleep(0.2)
+                if lcd.is_pressed(LCD.DOWN):
+                    data[cursor] -= 1
+                    lcd.clear()
+                    lcd.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
+                    time.sleep(0.2)
+                # change cursor position
+                if lcd.is_pressed(LCD.RIGHT):
+                    if cursor < (len(data)-1):
+                        cursor += 1
+                        lcd.clear()
+                        lcd.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
+                    time.sleep(0.2)
+                if lcd.is_pressed(LCD.LEFT):
+                    if cursor > 0:
+                        cursor -= 1
+                        lcd.clear()
+                        lcd.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
+                    time.sleep(0.2)
+            time.sleep(0.2)            
 
         # string data
-        if type(data) is string:
+        if type(data) is str:
+
+            # display cursor
+            lcd.show_cursor(True)
 
             # string edit options
             min_char_value = 32
             max_char_value = 126
 
             # help string with controls
-            controls = ""#\x0%d\x0%d\x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+            controls = "\x01"
+
+            # display initial data
+            lcd.clear()
+            lcd.message(data + "\n" + controls)
 
             # wait for select (=OK) signal
             while not lcd.is_pressed(LCD.SELECT):
@@ -141,24 +180,30 @@ def edit_detection_settings_menu():
                     # if cursor moves out of string -> insert new character
                     if cursor >= len(data):
                         data += " "
-                    lcd.set_cursor(cursor,0)
+                    lcd.set_cursor(cursor,1)
                     time.sleep(0.2)
                 if lcd.is_pressed(LCD.LEFT):
                     if cursor > 0:
                         cursor -= 1
-                        lcd.set_cursor(cursor,0)
+                        lcd.set_cursor(cursor,1)
                     time.sleep(0.2)
+                print 'one more'
             data = data.strip() # remove redundant whitespace
             time.sleep(0.2)
 
         # bool data
         if type(data) is bool:
-            controls = ""#\x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"],n_chars["SELECT"])
+            controls = "\x02"
+
+            lcd.clear()
+            lcd.message(str(data) + "\n" + controls)
 
             # wait for select
             while not lcd.is_pressed(LCD.SELECT):
                 if lcd.is_pressed(LCD.UP) or lcd.is_pressed(LCD.DOWN):
                     data = not data
+                    lcd.clear()
+                    lcd.message(str(data) + "\n" + controls)
                     time.sleep(0.2)
             time.sleep(0.2)
 
@@ -167,11 +212,10 @@ def edit_detection_settings_menu():
             # define type specific options and help string (indicates step size!)
             if type(data) is float:
                 step = 1.0
-                controls = ""#\x0%d\x0%d\x0%d%f \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                controls = "\x01\x03%f" % step
             else:
                 step = 1
-                controls = ""#\x0%d\x0%d\x0%d%d \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
-
+                controls = "\x01\x03%d" % step
             # wait for select
             while not lcd.is_pressed(LCD.SELECT):
                 # change value by step size
@@ -191,18 +235,18 @@ def edit_detection_settings_menu():
                     step /= 10
                     if type(data) is int:
                         step = max(step,1)
-                        controls = ""#\x0%d\x0%d\x0%d%d \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                        controls = "\x01\x03%d" % step
                     else:
-                        controls = ""#\x0%d\x0%d\x0%d%f \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                        controls = "\x01\x03%f" % step
                     lcd.clear()
                     lcd.message(str(data) + "\n" + controls)
                     time.sleep(0.2)
                 if lcd.is_pressed(LCD.LEFT):
                     step *=10
                     if type(data) is int:
-                        controls = ""#\x0%d\x0%d\x0%d%d \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                        controls = "\x01\x03%d" % step
                     else:
-                        controls = ""#\x0%d\x0%d\x0%d%f \x0%d\x0%d\x0%d Ok" % (n_chars["UP"], n_chars["DOWN"], n_chars["PM"], step, n_chars["RIGHT"], n_chars["LEFT"], n_chars["SELECT"])
+                        controls = "\x01\x03%f" % step
                     lcd.clear()
                     lcd.message(str(data) + "\n" + controls)
                     time.sleep(0.2)
@@ -213,6 +257,7 @@ def edit_detection_settings_menu():
 
         # get new edit entry
         edit_key = select_lcd_list(lcd, keys_text)
+        time.sleep(0.2)
     return settings_menu
 
 
