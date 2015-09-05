@@ -13,16 +13,6 @@ import warnings
 import RPi.GPIO as GPIO
 import threading
 
-if __name__ == '__main__':
-    # configure argument parser
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--conf", required=False, help="Path to json configuration file", default="conf.json")
-
-    # extract arguments
-    args = vars(parser.parse_args())
-    init(args["conf"])
-
-
 # global objects
 conf = None
 camera = None
@@ -134,3 +124,12 @@ def run():
             rawCapture.truncate(0)
     except KeyboardInterrupt or stop_recording:
         print("[INFO] Motion detection stopped.")
+
+if __name__ == '__main__':
+    # configure argument parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--conf", required=False, help="Path to json configuration file", default="conf.json")
+
+    # extract arguments
+    args = vars(parser.parse_args())
+    init(args["conf"])

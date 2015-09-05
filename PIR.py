@@ -19,15 +19,6 @@ Other global paramters are:
 Note: do not load with the `from ... import *` syntax to avoid naming conflicts.
 """
 
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument("-c", "--conf", required=False, help="Path to json configuration file", default="conf.json")
-
-    args = vars(parser.parse_args())
-    conf_file = args["conf"]
-
-    init(conf_file)
-
 # camera
 camera = None
 
@@ -101,3 +92,12 @@ def run():
             time.sleep(100)
     except KeyboardInterrupt or run_complete:
         print("[INFO] Motion detection ended. Cleaning and returning to menu.")
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument("-c", "--conf", required=False, help="Path to json configuration file", default="conf.json")
+
+    args = vars(parser.parse_args())
+    conf_file = args["conf"]
+
+    init(conf_file)
