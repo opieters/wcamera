@@ -45,7 +45,7 @@ def run():
 
     # warming up camera
     print "[INFO] warming up..."
-    time.sleep(conf["camera_warmup_time"])
+    time.sleep(conf["camera warmup time"])
     avg_frame = None
 
     rawCapture = PiRGBArray(camera, size=tuple(conf["resolution"]))
@@ -69,9 +69,9 @@ def run():
             timestamp = datetime.datetime.now()
             text = "No wildlife"
 
-            frame = imutils.resize(frame, width=conf["detection_width"]) # resize frame
+            frame = imutils.resize(frame, width=conf["detection width"]) # resize frame
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # convert to gray scale (gray frame)
-            gray = cv2.GaussianBlur(gray, tuple(conf["motion_blur_kernel_size"]), conf["motion_blur_std_x"]) # blur frame
+            gray = cv2.GaussianBlur(gray, tuple(conf["motion blur kernel size"]), conf["motion blur std x"]) # blur frame
 
             # init average frame
             if avg_frame is None:
@@ -80,10 +80,10 @@ def run():
                 rawCapture.truncate(0)
                 continue
 
-            cv2.accumulateWeighted(gray, avg_frame, conf["motion_dection_average_weight"])
+            cv2.accumulateWeighted(gray, avg_frame, conf["motion dection average weight"])
 
             frame_diff = cv2.absdiff(gray, cv2.convertScaleAbs(avg_frame))
-            frame_thr = cv2.threshold(frame_diff, conf["motion_threshold"], 255, cv2.THRESH_BINARY)[1]
+            frame_thr = cv2.threshold(frame_diff, conf["motion threshold"], 255, cv2.THRESH_BINARY)[1]
 
             # fill holes (dilate) in image and find countours on threshold image
             frame_thr = cv2.dilate(frame_thr, None, iterations=2)
@@ -94,7 +94,7 @@ def run():
             # loop over contours
             for c in cnts:
                 # ignore contour if too small
-                if cv2.contourArea(c) < conf["motion_min_area"]:
+                if cv2.contourArea(c) < conf["motion min area"]:
                     continue
 
                 # compute contour bouding box and draw on frame
@@ -114,7 +114,7 @@ def run():
                 cv2.imwrite("motion-" + timestamp_txt,frame)
 
             # show frame and record if user pressed key
-            if conf["show_video"]:
+            if conf["show video"]:
                 cv2.imshow("Security Feed",frame)
                 cv2.imshow("Thresh",frame_thr)
                 cv2.imshow("Frame Delta",frame_diff)
