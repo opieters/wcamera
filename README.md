@@ -1,7 +1,7 @@
 Wildlife detection
 ==================
 
-A wildlife detection camera with Raspberry Pi. Either motion sensing based on the video stream (supported by OpenCV) or a PIR can be used to make wildfile images and videos. 
+A wildlife detection camera with Raspberry Pi. Either motion sensing based on the video stream (supported by OpenCV) or a PIR can be used to make wildfile images and videos.
 
 Installation
 ------------
@@ -13,8 +13,8 @@ Before you can run the script, two things have to be done:
 
 If everything goes well, the above steps are performed by the install.sh script. First download the repository, then run the script as follows:
 
-`chmod +x install.sh`
-`sudo ./install.sh`
+1. `chmod +x install.sh`
+2. `sudo ./install.sh`
 
 Finally, you need to reboot your Raspberry Pi to make sure all new settings are in effect.
 
