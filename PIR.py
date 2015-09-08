@@ -32,13 +32,14 @@ __motion__ = None
 __recording__ = None
 __record_video__ = None
 __run_timer__ = None
+__motion_timer__ =  None
 
 # define all 'private' methods
 def __reset_variables__():
-    global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__
+    global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__, __motion_timer__
 
     __camera__.resolution = tuple(__conf__["resolution"])
-    __camear__.led = __conf__["camera LED"]
+    __camera__.led = __conf__["camera LED"]
     __motion__ = False
     __run_complete__ = False
     __recording__ = False
@@ -50,6 +51,8 @@ def __motion_detected__(file_name):
     """Callback if motion is detected. A video or still image will be created
     with name file_name.
     """
+
+    print("[INFO] Motion detected")
 
     global __recording__, __motion__
 
@@ -68,11 +71,11 @@ def __motion_detected__(file_name):
 
         print("[INFO] Capture frame" + file_name)
 
-    print("[INFO] Motion detected")
-
 
 def __no_motion__():
     """Callback if motion ended."""
+
+    print("[INFO] Motion ended")
 
     global __motion__, __motion_timer__
 
@@ -84,8 +87,6 @@ def __no_motion__():
             __motion_timer__.cancel()
 
         __motion_timer__ = Timer(__conf__["motion delay"], __stop_recording__).start()
-
-    print("[INFO] Motion ended")
 
 def __stop_recording__():
     """Stops camera recording (if in progress)."""
@@ -175,6 +176,8 @@ def init(conf_file="conf.json"):
 def delete():
     """Decallocate all nessesary veriables and stop timers."""
 
+    __reset_variables__()
+
     # if camera is still recording, stop it before deallocation
     if __camera__.recording:
         __camera__.stop_recording()
@@ -188,8 +191,6 @@ def delete():
     if __motion_timer__ is not None:
         __motion_timer__.cancel()
         __motion_timer__.join()
-
-    __reset_varibales__()
 
     # clean GPIO pins
     GPIO.cleanup(__conf__["PIR GPIO pin"])
