@@ -33,10 +33,11 @@ __recording__ = None
 __record_video__ = None
 __run_timer__ = None
 __motion_timer__ =  None
+__duration__ = None
 
 # define all 'private' methods
 def __reset_variables__():
-    global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__, __motion_timer__
+    global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__, __motion_timer__, __duration__
 
     __camera__.resolution = tuple(__conf__["resolution"])
     __camera__.led = __conf__["camera LED"]
@@ -46,6 +47,7 @@ def __reset_variables__():
     __record_video__ = __conf__["record video"]
     __run_timer__ = None
     __motion_timer__ = None
+    __duration__ = None
 
 def __motion_detected__(file_name):
     """Callback if motion is detected. A video or still image will be created
@@ -125,7 +127,7 @@ def run(duration=None):
 
     __reset_variables__()
 
-    global __run_complete__, __run_timer__
+    global __run_complete__, __run_timer__, __duration__
 
     GPIO.setup(__conf__["PIR GPIO pin"], GPIO.IN) # register GPIO pin
 
@@ -133,11 +135,13 @@ def run(duration=None):
 
     # load duration from config file if needed
     if duration is None:
-        duration = __conf__["duration"]
+        __duration__ = __conf__["duration"]
+    else:
+        __duration__ = duration
 
     # stop recording after specified time if needed
-    if duration > 0:
-        __run_timer__ = Timer(__conf__["duration"], __run_timer_callback__)
+    if __duration__ > 0:
+        __run_timer__ = Timer(__duration__, __run_timer_callback__)
         __run_timer__.start()
 
     # start recording, if KeyboardInterrupt stop execution (for debugging)
@@ -158,7 +162,7 @@ def run(duration=None):
             time.sleep(3)
 
     except KeyboardInterrupt:
-        print("[INFO] Motion detection ended. Cleaning and returning to menu.")
+        print("[INFO] Motion detection ended.")
     except PiCameraError:
         print("[ERROR] Camera error... Stop detection")
 
@@ -176,19 +180,16 @@ def init(conf_file="conf.json"):
 def delete():
     """Decallocate all nessesary veriables and stop timers."""
 
-    __reset_variables__()
-
     # if camera is still recording, stop it before deallocation
     if __camera__.recording:
         __camera__.stop_recording()
 
-    __camera__.close() # release camera
-
-    if __run_timer__ is not None:
+    if (__duration__ > 0) and (__run_timer__ is not None):
         __run_timer__.cancel()
         __run_timer__.join()
 
     if __motion_timer__ is not None:
+        print 'motion timer'
         __motion_timer__.cancel()
         __motion_timer__.join()
 
@@ -197,10 +198,16 @@ def delete():
     if __conf__["stop detection GPIO pin"] >= 0:
         GPIO.cleanup(__conf__["stop detection GPIO pin"])
 
+    __reset_variables__()
+
+    __camera__.close() # release camera
+
+    print("[INFO] Released objects")
+
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-c", "--conf", required=False, help="Path to json configuration file", default="conf.json")
-    parser.add_argument("-d", "--duration", required=False, help="Duration of motion detection", default=None)
+    parser.add_argument("-d", "--duration", required=False, help="Duration of motion detection", default=None, type=int)
 
     args = vars(parser.parse_args())
 
