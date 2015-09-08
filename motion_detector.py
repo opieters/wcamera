@@ -159,8 +159,8 @@ def run(duration=None):
             # if motion has been detected, save frame to file
             if motion:
                 timestamp_txt = timestamp.strftime("%x-%X")
-                print("[INFO] Motion detected at "+timestamp_txt)
-                cv2.imwrite("motion-" + timestamp_txt,frame)
+                print("[INFO] Motion detected at " + timestamp_txt)
+                cv2.imwrite(__conf__["directory"] + "motion-" + timestamp_txt, frame)
 
             # show frame and record if user pressed key
             if __conf__["show video"]:

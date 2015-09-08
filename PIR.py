@@ -108,9 +108,9 @@ def __pir_event__(pin):
 
     if GPIO.input(pin): # rising
         if __record_video__:
-            __motion_detected__("motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".h264")
+            __motion_detected__(__conf__["directory"] + "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".h264")
         else:
-            __motion_detected__("motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".jpg")
+            __motion_detected__(__conf__["directory"] + "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".jpg")
     else: # falling
         __no_motion__()
 
