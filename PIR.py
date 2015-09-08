@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import RPi.GPIO as GPIO
 import time, datetime, json
 from picamera import PiCamera, PiCameraError
@@ -37,6 +38,7 @@ __duration__ = None
 
 # define all 'private' methods
 def __reset_variables__():
+    """Reset all variables to default values."""
     global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__, __motion_timer__, __duration__
 
     __camera__.resolution = tuple(__conf__["resolution"])
@@ -178,7 +180,7 @@ def init(conf_file="conf.json"):
     __camera__ = PiCamera()
 
 def delete():
-    """Decallocate all nessesary veriables and stop timers."""
+    """Release all nessesary veriables and stop timers."""
 
     # if camera is still recording, stop it before deallocation
     if __camera__.recording:
