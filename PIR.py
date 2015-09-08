@@ -33,40 +33,7 @@ __recording__ = None
 __record_video__ = None
 __run_timer__ = None
 
-def init(conf_file="conf.json"):
-    """Initialise module for recording with configuration file_conf or
-    conf.json if unspecified.
-    """
-
-    global __conf__, __camera__
-
-    __conf__ = json.load(open(conf_file))
-    __camera__ = PiCamera()
-
-def delete():
-    """Decallocate all nessesary veriables and stop timers."""
-
-    # if camera is still recording, stop it before deallocation
-    if __camera__.recording:
-        __camera__.stop_recording()
-
-    __camera__.close() # release camera
-
-    if __run_timer__ is not None:
-        __run_timer__.cancel()
-        __run_timer__.join()
-
-    if __motion_timer__ is not None:
-        __motion_timer__.cancel()
-        __motion_timer__.join()
-
-    __reset_varibales__()
-
-    # clean GPIO pins
-    GPIO.cleanup(__conf__["PIR GPIO pin"])
-    if __conf__["stop detection GPIO pin"] >= 0:
-        GPIO.cleanup(__conf__["stop detection GPIO pin"])
-
+# define all 'private' methods
 def __reset_varibales__():
     global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__
 
@@ -194,6 +161,40 @@ def run(duration=None):
     except PiCameraError:
         print("[ERROR] Camera error... Stop detection")
 
+
+def init(conf_file="conf.json"):
+    """Initialise module for recording with configuration file_conf or
+    conf.json if unspecified.
+    """
+
+    global __conf__, __camera__
+
+    __conf__ = json.load(open(conf_file))
+    __camera__ = PiCamera()
+
+def delete():
+    """Decallocate all nessesary veriables and stop timers."""
+
+    # if camera is still recording, stop it before deallocation
+    if __camera__.recording:
+        __camera__.stop_recording()
+
+    __camera__.close() # release camera
+
+    if __run_timer__ is not None:
+        __run_timer__.cancel()
+        __run_timer__.join()
+
+    if __motion_timer__ is not None:
+        __motion_timer__.cancel()
+        __motion_timer__.join()
+
+    __reset_varibales__()
+
+    # clean GPIO pins
+    GPIO.cleanup(__conf__["PIR GPIO pin"])
+    if __conf__["stop detection GPIO pin"] >= 0:
+        GPIO.cleanup(__conf__["stop detection GPIO pin"])
 
 if __name__ == '__main__':
     parser = ArgumentParser()
