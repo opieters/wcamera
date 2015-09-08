@@ -2,7 +2,7 @@
 #!/usr/bin/env python
 
 # Example using a character LCD plate.
-import time
+import time, os, json
 import Adafruit_CharLCD as LCD
 from char_ui import *
 
@@ -15,13 +15,19 @@ lcd.clear()
 lcd.message("Please wait...")
 time.sleep(1)
 
+# configuration file
+conf_file = "conf.json"
+conf = json.load(open(conf_file))
+
+# check if frame/video save folder exists
+if not os.path.exists(conf["directory"]):
+    os.makedirs(conf["directory"])
+
 # define special chars
 for char in special_chars:
     lcd.create_char(i[0], i[1])
 
-# configuration file
-conf_file = "conf.json"
-
+# start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")
 submenu = main_menu
 try:
