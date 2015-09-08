@@ -32,8 +32,8 @@ def select_lcd_list(display, entries):
     return pos
 
 def main_menu(display):
-    menu_text = ("Record", "Settings", "USB", "Display", "Shut down")
-    menu_call = (record_menu, settings_menu, usb_menu, display_menu, shut_down_menu)
+    menu_text = ("Record", "Settings", "USB", "Display", "System")
+    menu_call = (record_menu, settings_menu, usb_menu, display_menu, system_menu)
     selected_entry = select_lcd_list(display, menu_text)
     return menu_call[selected_entry]
 
@@ -256,7 +256,7 @@ def display_menu(display):
     selected_entry = select_lcd_list(display, menu_text)
     return menu_call[selected_entry]
 
-def shut_down_menu(display):
+def system_menu(display):
     menu_text = ("Shut down", "Sleep", "Reboot", "Back")
     menu_call = (None, no_menu, None, main_menu)
     selected_entry = select_lcd_list(display, menu_text)
