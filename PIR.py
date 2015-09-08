@@ -34,7 +34,7 @@ __record_video__ = None
 __run_timer__ = None
 
 # define all 'private' methods
-def __reset_varibales__():
+def __reset_variables__():
     global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__
 
     __camera__.resolution = tuple(__conf__["resolution"])
