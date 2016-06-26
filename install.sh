@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "[INFO] Installing dependencies (Python, OpenCV)"
-cd ~
+pushd ~
 sudo apt-get update
 sudo apt-get install python-dev -y # -y installs missing headers
 sudo apt-get install libopencv-dev python-opencv python-smbus i2c-tools # open cv + python bindings + i2c x
@@ -35,3 +35,5 @@ cd Adafruit_Python_CharLCD
 sudo python setup.py install
 echo "[INFO] Installed all dependencies"
 echo "[INFO] Tried to install I2C, if failed please check README. Please reboot NOW!"
+
+popd
