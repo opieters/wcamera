@@ -25,13 +25,13 @@ if not os.path.exists(conf["directory"]):
 
 # define special chars
 for char in special_chars:
-    lcd.create_char(i[0], i[1])
+    lcd.create_char(char[0], char[1])
 
 # start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")
 submenu = main_menu
 try:
     while hasattr(submenu, '__call__'):
-        submenu = submenu()
+        submenu = submenu(lcd)
 except KeyboardInterrupt:
     print("[INFO] KeyboardInterrupt, exiting...")
