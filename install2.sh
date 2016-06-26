@@ -55,7 +55,7 @@ echo "Installing other dependencies for wcamera..."
 sudo apt-get update
 sudo apt-get install python-dev -y # -y installs missing headers
 sudo apt-get install python-smbus i2c-tools # open cv + python bindings + i2c x
-sudo pip install RPi.GPIO imutils picamera
+sudo pip install RPi.GPIO imutils picamera wifi
 
 echo "Attempting to automatically enable i2c"
 

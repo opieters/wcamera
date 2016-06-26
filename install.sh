@@ -6,7 +6,7 @@ sudo apt-get update
 sudo apt-get install python-dev -y # -y installs missing headers
 sudo apt-get install libopencv-dev python-opencv python-smbus i2c-tools # open cv + python bindings + i2c x
 sudo apt-get install python-pip
-sudo pip install RPi.GPIO imutils picamera
+sudo pip install RPi.GPIO imutils picamera wifi
 echo "Attempting to automatically enable i2c"
 
 if [ -f /etc/modprobe.d/raspi-blacklist.conf ]; then
