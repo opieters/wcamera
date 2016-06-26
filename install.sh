@@ -6,7 +6,7 @@ sudo apt-get update
 sudo apt-get install python-dev -y # -y installs missing headers
 sudo apt-get install libopencv-dev python-opencv python-smbus i2c-tools # open cv + python bindings + i2c x
 sudo apt-get install python-pip
-sudo pip install RPi.GPIO imutils
+sudo pip install RPi.GPIO imutils picamera
 echo "Attempting to automatically enable i2c"
 
 if [ -f /etc/modprobe.d/raspi-blacklist.conf ]; then
@@ -16,17 +16,6 @@ else
     declare -a content=("i2c-bcm2708" "i2c-dev" "dtparam=i2c1=on" "dtparam=i2c_arm=on")
     declare -a files=("/etc/modules" "/etc/modules" "/boot/config.txt" "/boot/config.txt")
 fi
-
-l=${#content[@]}
-
-for (( i=0; i<${l}; i++));
-do
-    EXPR="${content[$i]}"
-    FILE="${files[$i]}"
-    if ! grep -Fxq "$EXPR" $FILE ; then
-        sudo cat "$EXPR" >> "$FILE"
-    fi
-done
 
 echo "[INFO] Downloading Adafruit Char LCD shield software"
 rm -rf Adafruit_Python_CharLCD

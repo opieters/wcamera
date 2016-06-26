@@ -27,6 +27,10 @@ After installing all packages (assuming there are no errors) and reboot, test th
 
 Users who want to compile OpenCV themselves, should run the `install2.sh` script with is based on [this tutorial](http://www.pyimagesearch.com/2015/02/23/install-opencv-and-python-on-your-raspberry-pi-2-and-b/) but otherwise performs the same actions. Please mind that OpenCV is installed in a `virtualenv` for convenience.
 
+### I2C failed to Installing
+
+If I2C is not functioning correctly, try using [this guide](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c)
+
 Usage
 -----
 
@@ -35,4 +39,4 @@ TODO
 License
 -------
 
-© 2015-2016 Olivier Pieters, MIT license. 
+© 2015-2016 Olivier Pieters, MIT license.
