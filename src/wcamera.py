@@ -3,7 +3,8 @@
 # Example using a character LCD plate.
 import time, os, json
 import Adafruit_CharLCD as LCD
-from char_ui import *
+from menu import Menu
+from ui import UI
 
 # Initialize the LCD
 lcd = LCD.Adafruit_CharLCDPlate()
@@ -23,14 +24,14 @@ if not os.path.exists(conf["directory"]):
     os.makedirs(conf["directory"])
 
 # define special chars
-for char in special_chars:
-    lcd.create_char(char[0], char[1])
+Menu.init(lcd)
 
 # start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")
-submenu = main_menu
+submenu = Menu.main_menu
+
 try:
     while hasattr(submenu, '__call__'):
-        submenu = submenu(lcd)
+        submenu = submenu()
 except KeyboardInterrupt:
     print("[INFO] KeyboardInterrupt, exiting...")
