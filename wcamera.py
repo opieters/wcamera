@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#!/usr/bin/env python
 
 # Example using a character LCD plate.
 import time, os, json

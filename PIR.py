@@ -73,7 +73,7 @@ def __motion_detected__(file_name):
     elif not __record_video__:
         __camera__.capture(file_name)
 
-        print("[INFO] Capture frame" + file_name)
+        print("[INFO] Capture frame " + file_name)
 
 
 def __no_motion__():
