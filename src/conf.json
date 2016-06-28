@@ -18,5 +18,6 @@
     "stop detection GPIO pin": -1,
     "camera LED": false,
     "annotations": false,
-    "directory": "./detected/"
+    "directory": "./detected/",
+    "home": "/home/pi/"
 }

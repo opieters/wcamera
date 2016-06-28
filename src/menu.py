@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 # Example using a character LCD plate.
-import math, time, json, PIR, motion_detector, urllib2
+import math, time, json, PIR, motion_detector
 import Adafruit_CharLCD as LCD
 from os import system
 from wifi import Cell, Scheme
 from ui import UI
+from core import Core
 
 class Menu:
 
@@ -13,6 +14,7 @@ class Menu:
     numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     space = [' ']
     symbols = []
+    conf_file = "conf.json"
 
     # Make list of button value, text, and backlight color.
     special_chars = [(1, ( 0, 4, 0,21, 0, 4, 0, 0)), # ALL CONTROLS
@@ -20,13 +22,15 @@ class Menu:
                      (3, [ 4, 4,31, 4, 4, 0,31, 0])] # PM
 
     @staticmethod
-    def init(display):
+    def init(display,conf_file):
         UI.init(display,special_chars=Menu.special_chars)
+        Menu.conf_file = conf_file
+        Menu.conf = json.load(open(Menu.conf_file))
 
     @staticmethod
     def main_menu():
-        menu_text = ("Record", "Settings", "USB", "Display", "System")
-        menu_call = (Menu.record_menu, Menu.settings_menu, Menu.usb_menu, Menu.display_menu, Menu.system_menu)
+        menu_text = ("Record", "Settings", "Display", "System")
+        menu_call = (Menu.record_menu, Menu.settings_menu, Menu.display_menu, Menu.system_menu)
         selected_entry = UI.select_from_list(menu_text)
         return menu_call[selected_entry]
 
@@ -49,179 +53,36 @@ class Menu:
 
     @staticmethod
     def settings_menu():
-        menu_text = ("Detection", "USB", "WiFi", "Update", "Back")
-        menu_call = (Menu.edit_detection_settings_menu, Menu.edit_usb_settigs_menu, Menu.edit_wifi_menu, Menu.update_menu, Menu.main_menu)
+        menu_text = ("Detection", "WiFi", "Update", "Back")
+        menu_call = (Menu.edit_detection_settings_menu, Menu.edit_wifi_menu, Menu.update_menu, Menu.main_menu)
         selected_entry = UI.select_from_list(menu_text)
         return menu_call[selected_entry]
 
     @staticmethod
     def edit_detection_settings_menu():
-        # load configuration file
-        conf = json.load(open(conf_file))
-        keys_text = tuple([k for k in conf] + ["Back"])
-
-        # initial loop over entries
-        edit_key = UI.select_from_list(keys_text)
-
-        while keys_text[edit_key] != "Back":
-            cursor = 0 # cursor default position
-            data = conf[keys_text[edit_key]] # extract data
-
-            # list type
-            if type(data) is list:
-                # display cursor
-                display.show_cursor(True)
-
-                # display initial data
-                display.clear()
-                display.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
-
-                # wait for select (=OK) signal
-                while not display.is_pressed(LCD.SELECT):
-                    # change character
-                    if display.is_pressed(LCD.UP):
-                        data[cursor] += 1
-                        display.clear()
-                        display.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
-                        time.sleep(0.2)
-                    if display.is_pressed(LCD.DOWN):
-                        data[cursor] -= 1
-                        display.clear()
-                        display.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
-                        time.sleep(0.2)
-                    # change cursor position
-                    if display.is_pressed(LCD.RIGHT):
-                        if cursor < (len(data)-1):
-                            cursor += 1
-                            display.clear()
-                            display.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
-                        time.sleep(0.2)
-                    if display.is_pressed(LCD.LEFT):
-                        if cursor > 0:
-                            cursor -= 1
-                            display.clear()
-                            display.message(str(data) + '\n\x01 Edit: ' + str(data[cursor]))
-                        time.sleep(0.2)
-                time.sleep(0.2)
-
-            # string data
-            if type(data) is str:
-
-                # display cursor
-                display.show_cursor(True)
-
-                # string edit options
-                min_char_value = 32
-                max_char_value = 126
-
-                # help string with controls
-                controls = "\x01"
-
-                # display initial data
-                display.clear()
-                display.message(data + "\n" + controls)
-
-                # wait for select (=OK) signal
-                while not display.is_pressed(LCD.SELECT):
-                    # change character
-                    if display.is_pressed(LCD.UP):
-                        if ord(data[cursor]) < max_char_value:
-                            data[cursor] = chr(ord(data[cursor]) + 1)
-                        else:
-                            data[cursor] = min_char_value
-                            display.clear()
-                            display.message(data + "\n" + controls)
-                        time.sleep(0.2)
-                    if display.is_pressed(LCD.DOWN):
-                        if ord(data[cursor]) > min_char_value:
-                            data[cursor] = chr(ord(data[cursor]) - 1)
-                        else:
-                            data[cursor] = max_char_value
-                        time.sleep(0.2)
-                    # change cursor position
-                    if display.is_pressed(LCD.RIGHT):
-                        cursor += 1
-                        # if cursor moves out of string -> insert new character
-                        if cursor >= len(data):
-                            data += " "
-                        display.set_cursor(cursor,1)
-                        time.sleep(0.2)
-                    if display.is_pressed(LCD.LEFT):
-                        if cursor > 0:
-                            cursor -= 1
-                            display.set_cursor(cursor,1)
-                        time.sleep(0.2)
-                    print 'one more'
-                data = data.strip() # remove redundant whitespace
-                time.sleep(0.2)
-
-            # bool data
-            if type(data) is bool:
-                controls = "\x02"
-
-                display.clear()
-                display.message(str(data) + "\n" + controls)
-
-                # wait for select
-                while not display.is_pressed(LCD.SELECT):
-                    if display.is_pressed(LCD.UP) or display.is_pressed(LCD.DOWN):
-                        data = not data
-                        display.clear()
-                        display.message(str(data) + "\n" + controls)
-                        time.sleep(0.2)
-                time.sleep(0.2)
-
-            # numerical type (float or int)
-            if type(data) is int or type(data) is float:
-                # define type specific options and help string (indicates step size!)
-                if type(data) is float:
-                    step = 1.0
-                    controls = "\x01\x03%f" % step
-                else:
-                    step = 1
-                    controls = "\x01\x03%d" % step
-                # wait for select
-                while not display.is_pressed(LCD.SELECT):
-                    # change value by step size
-                    if display.is_pressed(LCD.UP):
-                        data += step
-                        display.clear()
-                        display.message(str(data) + "\n" + controls)
-                        time.sleep(0.2)
-                    if display.is_pressed(LCD.DOWN):
-                        data -= step
-                        display.clear()
-                        display.message(str(data) + "\n" + controls)
-                        time.sleep(0.2)
-
-                    # change step size (and update `controls`)
-                    if display.is_pressed(LCD.RIGHT):
-                        step /= 10
-                        if type(data) is int:
-                            step = max(step,1)
-                            controls = "\x01\x03%d" % step
-                        else:
-                            controls = "\x01\x03%f" % step
-                        display.clear()
-                        display.message(str(data) + "\n" + controls)
-                        time.sleep(0.2)
-                    if display.is_pressed(LCD.LEFT):
-                        step *=10
-                        if type(data) is int:
-                            controls = "\x01\x03%d" % step
-                        else:
-                            controls = "\x01\x03%f" % step
-                        display.clear()
-                        display.message(str(data) + "\n" + controls)
-                        time.sleep(0.2)
-                time.sleep(0.2)
-
-            # hide cursor in other menus
-            display.show_cursor(False)
-
-            # get new edit entry
-            edit_key = UI.select_from_list( keys_text)
-            time.sleep(0.2)
+        # display all dict entries for editing
+        UI.display_message("Select Done to\ncontinue")
+        conf_items = ["Done and quit"] + list(Menu.conf.keys())
+        selected = UI.select_from_list(conf_items,display_message="Select item",controls=False)
+        while selected != 0:
+            key = conf_items[selected]
+            print(key)
+            value = Menu.conf[key]
+            if type(value) is bool:
+                Menu.conf[key] = bool(UI.question(message="New %s value" % key))
+            elif type(value) is int:
+                Menu.conf[key] = int(UI.enter_text(message="New %s value" % key,chars=Menu.numbers))
+            elif type(value) is str:
+                Menu.conf[key] = UI.enter_text(message="New %s value" % key,chars=Menu.letters + Menu.numbers + Menu.symbols)
+            elif type(value) is list:
+                for i in range(len(value)):
+                    value[i] = int(UI.enter_text(message="New %s[%d] value" % (key,i),chars=Menu.numbers))
+            elif type(value) is float:
+                Menu.conf[key] = float(UI.enter_text(message="New %s value" % key, chars=Menu.numbers + ['.']))
+            selected = UI.select_from_list(conf_items,display_message="Select item",controls=False,pos=selected)
+        if UI.question("Save to file?",options=["Yes","No"]) == "Yes":
+            with open(conf_file,'w') as f:
+                f.write(json.dump(Menu.conf))
         return Menu.settings_menu
 
     @staticmethod
@@ -238,35 +99,26 @@ class Menu:
 
     @staticmethod
     def current_wifi_connection():
-        try:
-            response = urllib2.urlopen("http://www.ugent.be",timeout=1)
-            message = "Connected."
-        except urllib2.URLError:
-            message = "Not connected."
-        display_message(display, message)
+        UI.display_message("Please wait...")
+        message = "Connected" if Core.check_connection() else "Not connected"
+        UI.display_message(message)
         return Menu.edit_wifi_menu
 
     @staticmethod
     def new_wifi_connection():
         ssids = [cell.ssid for cell in Cell.all('wlan0')]
-        ssid = ssids[UI.select_from_list(ssids,display_message="Select SSID",display_controls=False)]
-        enter_text(display,message,pwd_chars)
+        if len(ssids) > 0:
+            ssid = ssids[UI.select_from_list(ssids,display_message="Select SSID",controls=False)]
+        pwd = UI.enter_text("Enter SSID pwd",Menu.space+Menu.letters+Menu.numbers+Menu.symbols)
+        Core.setup_wifi_connection(ssid,pwd)
         return Menu.edit_wifi_menu
 
     @staticmethod
     def update_menu():
-        menu_text = ("(W)LAN update", "USB update", "Back")
-        menu_call = (Menu.lan_update, Menu.usb_update, Menu.settings_menu)
-        selected_entry = UI.select_from_list( menu_text)
-        return menu_call[selected_entry]
-
-    @staticmethod
-    def lan_update():
-        print("[INFO] Updating via (W)LAN...")
-        #TODO
-
-    def usb_update():
-        print("[INFO] Updating via USB...")
+        home_dir = Menu.conf["home"]
+        message = "Updated" if Core.update(home_dir) else "Update failed"
+        UI.display_message(message)
+        return Menu.settings_menu
 
     @staticmethod
     def usb_menu():

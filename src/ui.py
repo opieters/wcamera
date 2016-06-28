@@ -18,6 +18,9 @@ class UI:
 
     @staticmethod
     def select_from_list(entries, pos=0, display_message="", controls=True):
+        if len(entries) == 0:
+            print("[ERR] List without entries was provided.")
+            return -1
         controls = "\x02"
         UI.display.clear()
         if controls:
@@ -47,22 +50,27 @@ class UI:
     @staticmethod
     def display_message(message):
         UI.display.clear()
+        UI.display.message(message)
         while not UI.display.is_pressed(LCD.SELECT):
-            pass
+            time.sleep(0.05)
+        time.sleep(0.2)
 
     @staticmethod
     def question(message,options=["True","False"],pos=0):
         UI.display.clear()
-        dispay.message(message + "\n" + str(options[pos]))
-        while not dispay.is_pressed(LCD.SELECT):
+        UI.display.message(message + "\n" + str(options[pos]))
+        while not UI.display.is_pressed(LCD.SELECT):
             if UI.display.is_pressed(LCD.UP):
                 pos = (pos-1) % len(options)
                 UI.display.clear()
                 UI.display.message(message + "\n" + options[pos])
+                time.sleep(0.2)
             if UI.display.is_pressed(LCD.DOWN):
                 pos = (pos+1) % len(options)
                 UI.display.clear()
                 UI.display.message(message + "\n" + options[pos])
+                time.sleep(0.2)
+        time.sleep(0.2)
         return pos
 
     @staticmethod
@@ -88,7 +96,7 @@ class UI:
                 # add character if needed
                 if cursor == (len(text)-1):
                     if limit is None or cursor < max(limit-1,0):
-                        text.append(chars[current_char_idx])
+                        text.append(chars[0])
                     else:
                         continue
 
@@ -100,6 +108,7 @@ class UI:
                 UI.display.clear()
                 UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
                 UI.display.set_cursor(cursor, 1)
+                time.sleep(0.2)
             if UI.display.is_pressed(LCD.LEFT) and cursor > 0:
                 cursor -= 1 # update cursor
                 # update UI.display bounds
@@ -109,20 +118,24 @@ class UI:
                 UI.display.clear()
                 UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
                 UI.display.set_cursor(cursor, 1)
+                time.sleep(0.2)
             if UI.display.is_pressed(LCD.UP):
-                current_char_idx = (current_char_idx+1) % len(chars) # change selected charcter index
+                current_char_idx = (chars.index(text[cursor])+1) % len(chars) # change selected charcter index
                 text[cursor] = chars[current_char_idx] # update text
                 # update message
                 UI.display.clear()
                 UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
                 UI.display.set_cursor(cursor, 1)
+                time.sleep(0.2)
             if UI.display.is_pressed(LCD.DOWN):
-                current_char_idx = (current_char_idx-1) % len(chars) # change selected charcter index
+                current_char_idx = (chars.index(text[cursor])-1) % len(chars) # change selected charcter index
                 text[cursor] = chars[current_char_idx] # update text
                 # update message
                 UI.display.clear()
                 UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
                 UI.display.set_cursor(cursor, 1)
+                time.sleep(0.2)
 
         UI.display.show_cursor(False) # stop displaying cursor, needed because others assume cursor is off
+        time.sleep(0.2)
         return ''.join(text).strip() # remove whitespace

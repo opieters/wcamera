@@ -24,7 +24,7 @@ if not os.path.exists(conf["directory"]):
     os.makedirs(conf["directory"])
 
 # define special chars
-Menu.init(lcd)
+Menu.init(lcd,conf_file)
 
 # start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")
