@@ -76,6 +76,7 @@ class Menu:
             elif type(value) is float:
                 self.conf[key] = float(self.ui.enter_text(message="New %s value" % key, chars=Menu.numbers + ['.']))
             selected = self.ui.select_from_list(conf_items,display_message="Select item",controls=False,pos=selected)
+        self.core.check_conf()
         if self.ui.question("Save to file?",options=["Yes","No"]) == "Yes":
             with open(conf_file,'w') as f:
                 f.write(json.dump(self.conf))

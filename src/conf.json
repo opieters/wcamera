@@ -1,5 +1,5 @@
 {
-    "show video": true,
+    "show video": false,
     "min motion frames": 8,
     "camera warmup time": 2.5,
     "motion threshold": 5,
@@ -14,10 +14,10 @@
     "motion dection average weight": 0.5,
     "motion delay": 10,
     "duration": 1000,
-    "PIR GPIO pin": 7,
+    "PIR GPIO pin": 14,
     "stop detection GPIO pin": -1,
     "camera LED": false,
     "annotations": false,
-    "directory": "./detected/",
+    "directory": "../detected/",
     "home": "/home/pi/"
 }
