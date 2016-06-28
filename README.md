@@ -29,7 +29,11 @@ Users who want to compile OpenCV themselves, should run the `install2.sh` script
 
 ### I2C failed to Install
 
-If I2C is not functioning correctly, try using [this guide](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c).
+Open `raspi-config`, select Advanced Options (9) and enable I2C. Alternatively, use [this guide](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c).
+
+### Camera
+
+Before attempting to record anything, make sure you activated the camera in `raspi-config` and correctly connected the camera module to the Raspberry Pi board.
 
 Usage
 -----
