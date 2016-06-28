@@ -16,17 +16,14 @@ lcd.clear()
 lcd.message("Please wait...")
 time.sleep(1)
 
-# configuration file
-conf_file = "conf.json"
-conf = json.load(open(conf_file))
+# define special chars
+core = Core("conf.json") # configuration file
+menu = Menu(lcd,core)
+
 
 # check if frame/video save folder exists
-if not os.path.exists(conf["directory"]):
-    os.makedirs(conf["directory"])
-
-# define special chars
-core = Core(conf)
-menu = Menu(lcd,conf_file,conf,core)
+if not os.path.exists(core.conf["directory"]):
+    os.makedirs(core.conf["directory"])
 
 # start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")

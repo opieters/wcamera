@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Example using a character LCD plate.
-import math, time, json, PIR, motion_detector
+import math, time, json, motion_detector
 import Adafruit_CharLCD as LCD
 from os import system
 from wifi import Cell, Scheme
@@ -14,17 +14,15 @@ class Menu:
     numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     space = [' ']
     symbols = []
-    conf_file = "conf.json"
 
     # Make list of button value, text, and backlight color.
     special_chars = [(1, ( 0, 4, 0,21, 0, 4, 0, 0)), # ALL CONTROLS
                      (2, ( 0, 4, 0, 4, 0, 4, 0, 0)), # UP, SELECT, DOWN
                      (3, [ 4, 4,31, 4, 4, 0,31, 0])] # PM
 
-    def __init__(self,display,conf_file,conf,core):
+    def __init__(self,display,core):
         self.ui = UI(display,special_chars=self.special_chars)
-        self.conf_file = conf_file
-        self.conf = conf
+        self.conf = core.conf
         self.core = core
 
     def main_menu(self):
@@ -37,15 +35,10 @@ class Menu:
         menu_text = ("Start PIR rec", "Start video rec", "Back")
         selected_entry = self.ui.select_from_list(menu_text)
         if selected_entry == 0:
-            print("[INFO] Starting PIR recording.")
-            PIR.init()
-            PIR.run()
-            PIR.delete()
-            print("[INFO] PIR recording ended.")
+            self.core.pir_recording()
             return self.record_menu
         elif selected_entry == 1:
-            print("[INFO] Starting video recording")
-            #TODO
+            self.code.video_recording()
             return self.record_menu
         return self.main_menu
 
@@ -78,8 +71,7 @@ class Menu:
             selected = self.ui.select_from_list(conf_items,display_message="Select item",controls=False,pos=selected)
         self.core.check_conf()
         if self.ui.question("Save to file?",options=["Yes","No"]) == "Yes":
-            with open(conf_file,'w') as f:
-                f.write(json.dump(self.conf))
+            core.save_conf()
         return self.settings_menu
 
     def edit_usb_settigs_menu(self):

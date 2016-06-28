@@ -1,218 +1,172 @@
 #!/usr/bin/env python
 
 import RPi.GPIO as GPIO
-import time, datetime, json
+import time, datetime, json, os
 from picamera import PiCamera, PiCameraError
 from threading import Timer
 from argparse import ArgumentParser
 
-"""PIR implements motion detection based on the readouts from a PIR sensor.
+class PIR:
 
-Can be used as a standalone script or as a module.
+    def __init__(self,conf):
+        """Initialise module for recording with configuration file_conf or
+        conf.json if unspecified.
+        """
+        self.camera = PiCamera()
+        self.conf = conf
 
-Script use:
-    Run with: `sudo python PIR.py [-c conf_file]`
-    If the configuration file is not specified, the default file will be loaded: `conf.json`
-    Open help with: `python PIR.py -h` or `python PIR.py --help`
+        self.run_complete = None
+        self.motion = None
+        self.recording = None
+        self.record_video = None
+        self.run_timer = None
+        self.motion_timer =  None
+        self.duration = None
 
-Module use:
-    1. call init([conf_file="conf.json"]) to initilise module
-    2. call run([duration]) to start recording, if duration unspecified, the config file duration is loaded.
-    3. call delete() to release all objects and clean up.
+    def reset_variables(self):
+        """Reset all variables to default values."""
 
-    Successive `run` calls may be perfromed before the `delete` call. The `delete` call can be undone with an `init` call, but the init method should only be called once (at the beginning) or after a `delete` call!
+        self.camera.resolution = tuple(self.conf["resolution"])
+        self.camera.led = self.conf["camera LED"]
+        self.motion = False
+        self.run_complete = False
+        self.recording = False
+        self.record_video = self.conf["record video"]
+        self.run_timer = None
+        self.motion_timer = None
+        self.duration = None
 
-Note: all methods have sufficiently small names so a from PIR import * is not advised (also because of possible naming conflicts)
-"""
+    def motion_detected(self,file_name):
+        """Callback if motion is detected. A video or still image will be created
+        with name file_name.
+        """
 
-# define ('private') global variables
-__camera__ = None
-__conf__ = None
-__run_complete__ = None
-__motion__ = None
-__recording__ = None
-__record_video__ = None
-__run_timer__ = None
-__motion_timer__ =  None
-__duration__ = None
+        print("[INFO] Motion detected")
 
-# define all 'private' methods
-def __reset_variables__():
-    """Reset all variables to default values."""
-    global __run_complete__, __motion__, __recording__, __record_video__, __run_timer__, __motion_timer__, __duration__
+        self.motion = True
 
-    __camera__.resolution = tuple(__conf__["resolution"])
-    __camera__.led = __conf__["camera LED"]
-    __motion__ = False
-    __run_complete__ = False
-    __recording__ = False
-    __record_video__ = __conf__["record video"]
-    __run_timer__ = None
-    __motion_timer__ = None
-    __duration__ = None
+        # if video file requested and not already recording, start recording
+        if (not self.recording) and self.record_video:
+            self.camera.start_recording(file_name)
+            self.recording = True
 
-def __motion_detected__(file_name):
-    """Callback if motion is detected. A video or still image will be created
-    with name file_name.
-    """
+            print("[INFO] Start recording" + file_name)
 
-    print("[INFO] Motion detected")
+        # capture still image
+        elif not self.record_video:
+            self.camera.capture(file_name)
 
-    global __recording__, __motion__
-
-    __motion__ = True
-
-    # if video file requested and not already recording, start recording
-    if (not __recording__) and __record_video__:
-        __camera__.start_recording(file_name)
-        __recording__ = True
-
-        print("[INFO] Start recording" + file_name)
-
-    # capture still image
-    elif not __record_video__:
-        __camera__.capture(file_name)
-
-        print("[INFO] Capture frame " + file_name)
+            print("[INFO] Capture frame " + file_name)
 
 
-def __no_motion__():
-    """Callback if motion ended."""
+    def no_motion(self):
+        """Callback if motion ended."""
 
-    print("[INFO] Motion ended")
+        print("[INFO] Motion ended")
 
-    global __motion__, __motion_timer__
+        self.motion = False
 
-    __motion__ = False
+        if self.record_video:
+            # cancel already running timer if needed
+            if self.motion_timer is not None:
+                self.motion_timer.cancel()
 
-    if __record_video__:
-        # cancel already running timer if needed
-        if __motion_timer__ is not None:
-            __motion_timer__.cancel()
+            self.motion_timer = Timer(self.conf["motion delay"], self.stop_recording).start()
 
-        __motion_timer__ = Timer(__conf__["motion delay"], __stop_recording__).start()
+    def stop_recording(self):
+        """Stops camera recording (if in progress)."""
 
-def __stop_recording__():
-    """Stops camera recording (if in progress)."""
 
-    global __recording__
+        if (not self.motion) and self.recording:
+            self.camera.stop_recording()
+            self.recording = False
 
-    if (not __motion__) and __recording__:
-        __camera__.stop_recording()
-        __recording__ = False
+            print("[INFO] Recording stopped.")
 
-        print("[INFO] Recording stopped.")
+    def pir_event(self,pin):
+        """PIR GPIO event callback."""
 
-def __pir_event__(pin):
-    """PIR GPIO event callback."""
+        if GPIO.input(pin): # rising
+            if self.record_video:
+                self.motion_detected(os.path.join(self.conf["directory"], "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".h264"))
+            else:
+                self.motion_detected(self.conf["directory"] + "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + "%dx%d.jpg" % (self.conf["resolution"][0], self.conf["resolution"][1]))
+        else: # falling
+            self.no_motion()
 
-    if GPIO.input(pin): # rising
-        if __record_video__:
-            __motion_detected__(__conf__["directory"] + "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".h264")
+    def run_timer_callback(self):
+        """Callback to end motion detection after conf["duration"] seconds"""
+
+        # stop recording
+        self.run_complete = True
+
+        print("[INFO] Run timer callback: stop recording")
+
+    def run(self,duration=None):
+        """Perform motion detecton."""
+
+        self.reset_variables()
+
+        GPIO.setup(self.conf["PIR GPIO pin"], GPIO.IN) # register GPIO pin
+
+        self.run_complete = False # run flag
+
+        # load duration from config file if needed
+        if duration is None:
+            self.duration = self.conf["duration"]
         else:
-            __motion_detected__(__conf__["directory"] + "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".jpg")
-    else: # falling
-        __no_motion__()
+            self.duration = duration
 
-def __run_timer_callback__():
-    """Callback to end motion detection after __conf__["duration"] seconds"""
+        # stop recording after specified time if needed
+        if self.duration > 0:
+            self.run_timer = Timer(self.duration, self.run_timer_callback)
+            self.run_timer.start()
 
-    global __run_complete__
+        # start recording, if KeyboardInterrupt stop execution (for debugging)
+        try:
+            print("[INFO] Press CTRL-C to exit run function prematurely")
+            time.sleep(1)
 
-    # stop recording
-    __run_complete__ = True
+            GPIO.add_event_detect(self.conf["PIR GPIO pin"], GPIO.BOTH, callback=self.pir_event)
 
-    print("[INFO] Run timer callback: stop recording")
+            # configure exit button if configured
+            if self.conf["stop detection GPIO pin"] >= 0:
+                print("[INFO] Detection GPIO pin active")
+                GPIO.setup(self.conf["stop detection GPIO pin"], GPIO.IN)
+                GPIO.add_event_detect(self.conf["stop detection GPIO pin"], GPIO.BOTH, callback=self.run_timer_callback)
 
-def run(duration=None):
-    """Perform motion detecton."""
+            # keep function alive and check every 3 seconds if the script needs to stop
+            while not self.run_complete:
+                time.sleep(3)
 
-    __reset_variables__()
+        except KeyboardInterrupt:
+            print("[INFO] Motion detection ended.")
+        except PiCameraError:
+            print("[ERROR] Camera error... Stopped detection.")
 
-    global __run_complete__, __run_timer__, __duration__
+    def delete(self):
+        """Release all nessesary veriables and stop timers."""
 
-    GPIO.setup(__conf__["PIR GPIO pin"], GPIO.IN) # register GPIO pin
+        # if camera is still recording, stop it before deallocation
+        if self.camera.recording:
+            self.camera.stop_recording()
 
-    __run_complete__ = False # run flag
+        if (self.duration > 0) and (self.run_timer is not None):
+            self.run_timer.cancel()
+            self.run_timer.join()
 
-    # load duration from config file if needed
-    if duration is None:
-        __duration__ = __conf__["duration"]
-    else:
-        __duration__ = duration
+        if self.motion_timer is not None:
+            print 'motion timer'
+            self.motion_timer.cancel()
+            self.motion_timer.join()
 
-    # stop recording after specified time if needed
-    if __duration__ > 0:
-        __run_timer__ = Timer(__duration__, __run_timer_callback__)
-        __run_timer__.start()
+        # clean GPIO pins
+        GPIO.cleanup(self.conf["PIR GPIO pin"])
+        if self.conf["stop detection GPIO pin"] >= 0:
+            GPIO.cleanup(self.conf["stop detection GPIO pin"])
 
-    # start recording, if KeyboardInterrupt stop execution (for debugging)
-    try:
-        print("[INFO] Press CTRL-C to exit run function prematurely")
-        time.sleep(1)
+        self.reset_variables()
 
-        GPIO.add_event_detect(__conf__["PIR GPIO pin"], GPIO.BOTH, callback=__pir_event__)
+        self.camera.close() # release camera
 
-        # configure exit button if configured
-        if __conf__["stop detection GPIO pin"] >= 0:
-            print("[INFO] Detection GPIO pin active")
-            GPIO.setup(__conf__["stop detection GPIO pin"], GPIO.IN)
-            GPIO.add_event_detect(__conf__["stop detection GPIO pin"], GPIO.BOTH, callback=__run_timer_callback__)
-
-        # keep function alive and check every 3 seconds if the script needs to stop
-        while not __run_complete__:
-            time.sleep(3)
-
-    except KeyboardInterrupt:
-        print("[INFO] Motion detection ended.")
-    except PiCameraError:
-        print("[ERROR] Camera error... Stop detection")
-
-
-def init(conf_file="conf.json"):
-    """Initialise module for recording with configuration file_conf or
-    conf.json if unspecified.
-    """
-
-    global __conf__, __camera__
-
-    __conf__ = json.load(open(conf_file))
-    __camera__ = PiCamera()
-
-def delete():
-    """Release all nessesary veriables and stop timers."""
-
-    # if camera is still recording, stop it before deallocation
-    if __camera__.recording:
-        __camera__.stop_recording()
-
-    if (__duration__ > 0) and (__run_timer__ is not None):
-        __run_timer__.cancel()
-        __run_timer__.join()
-
-    if __motion_timer__ is not None:
-        print 'motion timer'
-        __motion_timer__.cancel()
-        __motion_timer__.join()
-
-    # clean GPIO pins
-    GPIO.cleanup(__conf__["PIR GPIO pin"])
-    if __conf__["stop detection GPIO pin"] >= 0:
-        GPIO.cleanup(__conf__["stop detection GPIO pin"])
-
-    __reset_variables__()
-
-    __camera__.close() # release camera
-
-    print("[INFO] Released objects")
-
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument("-c", "--conf", required=False, help="Path to json configuration file", default="conf.json")
-    parser.add_argument("-d", "--duration", required=False, help="Duration of motion detection", default=None, type=int)
-
-    args = vars(parser.parse_args())
-
-    init(args["conf"])
-    run(args["duration"])
-    delete()
+        print("[INFO] Released objects")
