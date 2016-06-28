@@ -36,6 +36,13 @@ Usage
 
 TODO
 
+FAQ
+---
+
+### Why only Python2.7?
+
+Currently, OpenCV 2 is used, which does not officially support Python3. Moving towards OpenCV 3 will resolve this issue, but OpenCV 3 is still very new and thus OpenCV 2 was preferred.
+
 License
 -------
 
