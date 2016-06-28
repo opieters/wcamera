@@ -2,3 +2,6 @@
 *.jpg
 *.jpeg
 *.h264
+server/_data
+server/_site
+server/assets

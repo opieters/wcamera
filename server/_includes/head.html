@@ -1,0 +1,23 @@
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% if page.title %}{{ page.title | escape }}{% else %}{{ site.title | escape }}{% endif %}</title>
+  <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
+
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/skeleton/css/skeleton.css" />
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/skeleton/css/normalize.css" />
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/slicknav/dist/slicknav.min.css" />
+
+  <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
+
+  <script src="{{ site.baseurl }}/assets/jquery-mousewheel/jquery.mousewheel.min.js"></script>
+
+  <script src="{{ site.baseurl }}/assets/lightgallery/dist/js/lightgallery-all.min.js"></script>
+  <link rel="stylesheet" href="{{ site.baseurl }}/assets/lightgallery/dist/css/lightgallery.min.css" />
+  <script src="{{ site.baseurl }}/assets/isotope/dist/isotope.pkgd.min.js"></script>
+  <link rel="stylesheet" href="{{ site.url }}{{ site.baseurl }}/{{ "css/gallery.css" }}" />
+  <script src="{{ site.baseurl }}/assets/picturefill/dist/picturefill.min.js"></script>
+  <script src="{{ site.baseurl }}/assets/imagesloaded/imagesloaded.pkgd.min.js"></script>
+</head>

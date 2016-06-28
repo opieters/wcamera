@@ -1,0 +1,33 @@
+{
+  "name": "wcamera",
+  "authors": [
+    "Olivier Pieters <me@olivierpieters.be>"
+  ],
+  "description": "A wildlife detection camera",
+  "main": "",
+  "keywords": [
+    "wildlife",
+    "detection",
+    "raspberry",
+    "pi"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "slicknav": "^1.0.7",
+    "skeleton": "^2.0.4",
+    "jquery-mousewheel": "^3.1.13",
+    "lightgallery": "^1.2.21",
+    "picturefill": "^3.0.2",
+    "isotope": "^3.0.1",
+    "imagesloaded": "^4.1.0"
+  }
+}
