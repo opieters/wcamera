@@ -7,92 +7,86 @@ from os import system
 from wifi import Cell, Scheme
 
 class UI:
-    display = None
 
-    @staticmethod
-    def init(display,special_chars):
-        UI.display = display
+    def __init__(self,display,special_chars):
+        self.display = display
         if special_chars is not None:
             for char in special_chars:
-                UI.display.create_char(char[0], char[1])
+                self.display.create_char(char[0], char[1])
 
-    @staticmethod
-    def select_from_list(entries, pos=0, display_message="", controls=True):
+    def select_from_list(self,entries, pos=0, display_message="", controls=True):
         if len(entries) == 0:
             print("[ERR] List without entries was provided.")
             return -1
         controls = "\x02"
-        UI.display.clear()
+        self.display.clear()
         if controls:
-            UI.display.message(entries[pos] + "\n" + controls)
+            self.display.message(entries[pos] + "\n" + controls)
         else:
-            UI.display.message(display_message + "\n" + entries[pos])
-        while not UI.display.is_pressed(LCD.SELECT):
-            if UI.display.is_pressed(LCD.UP):
+            self.display.message(display_message + "\n" + entries[pos])
+        while not self.display.is_pressed(LCD.SELECT):
+            if self.display.is_pressed(LCD.UP):
                 pos = (pos - 1) % len(entries)
-                UI.display.clear()
+                self.display.clear()
                 if controls:
-                    UI.display.message(entries[pos] + "\n" + controls)
+                    self.display.message(entries[pos] + "\n" + controls)
                 else:
-                    UI.display.message(display_message + "\n" + entries[pos])
+                    self.display.message(display_message + "\n" + entries[pos])
                 time.sleep(0.2)
-            if UI.display.is_pressed(LCD.DOWN):
+            if self.display.is_pressed(LCD.DOWN):
                 pos = (pos + 1 ) % len(entries)
-                UI.display.clear()
+                self.display.clear()
                 if controls:
-                    UI.display.message(entries[pos] + "\n" + controls)
+                    self.display.message(entries[pos] + "\n" + controls)
                 else:
-                    UI.display.message(display_message + "\n" + entries[pos])
+                    self.display.message(display_message + "\n" + entries[pos])
                 time.sleep(0.2)
         time.sleep(0.2)
         return pos
 
-    @staticmethod
-    def display_message(message):
-        UI.display.clear()
-        UI.display.message(message)
-        while not UI.display.is_pressed(LCD.SELECT):
+    def display_message(self,message):
+        self.display.clear()
+        self.display.message(message)
+        while not self.display.is_pressed(LCD.SELECT):
             time.sleep(0.05)
         time.sleep(0.2)
 
-    @staticmethod
-    def question(message,options=["True","False"],pos=0):
-        UI.display.clear()
-        UI.display.message(message + "\n" + str(options[pos]))
-        while not UI.display.is_pressed(LCD.SELECT):
-            if UI.display.is_pressed(LCD.UP):
+    def question(self,message,options=["True","False"],pos=0):
+        self.display.clear()
+        self.display.message(message + "\n" + str(options[pos]))
+        while not self.display.is_pressed(LCD.SELECT):
+            if self.display.is_pressed(LCD.UP):
                 pos = (pos-1) % len(options)
-                UI.display.clear()
-                UI.display.message(message + "\n" + options[pos])
+                self.display.clear()
+                self.display.message(message + "\n" + options[pos])
                 time.sleep(0.2)
-            if UI.display.is_pressed(LCD.DOWN):
+            if self.display.is_pressed(LCD.DOWN):
                 pos = (pos+1) % len(options)
-                UI.display.clear()
-                UI.display.message(message + "\n" + options[pos])
+                self.display.clear()
+                self.display.message(message + "\n" + options[pos])
                 time.sleep(0.2)
         time.sleep(0.2)
         return pos
 
-    @staticmethod
-    def enter_text(message,chars,limit=None):
+    def enter_text(self,message,chars,limit=None):
         # add a null character that is removed afterwards
         if ' ' not in chars:
             chars = [' '] + chars
 
-        UI.display.show_cursor(True)  # always display cursor for current position
+        self.display.show_cursor(True)  # always display cursor for current position
         current_char_idx = 0       # current position in chars list
         cursor = 0                 # cursor position
         text = [chars[current_char_idx]] # submitted text (list of individual chars)
-        draw_from, draw_to = 0, UI.display._cols # bounds that text is displayed
+        draw_from, draw_to = 0, self.display._cols # bounds that text is displayed
 
-        # UI.display text
-        UI.display.clear()
-        UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
-        UI.display.set_cursor(cursor, 1)
+        # self.display text
+        self.display.clear()
+        self.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
+        self.display.set_cursor(cursor, 1)
 
         # wait until SELECT pressed -> done
-        while not UI.display.is_pressed(LCD.SELECT):
-            if UI.display.is_pressed(LCD.RIGHT):
+        while not self.display.is_pressed(LCD.SELECT):
+            if self.display.is_pressed(LCD.RIGHT):
                 # add character if needed
                 if cursor == (len(text)-1):
                     if limit is None or cursor < max(limit-1,0):
@@ -101,41 +95,41 @@ class UI:
                         continue
 
                 cursor += 1 # update cursor
-                # update UI.display bounds
+                # update self.display bounds
                 draw_to = max(draw_to,cursor+1)
-                draw_from = draw_to - UI.display._cols
+                draw_from = draw_to - self.display._cols
                 # update message
-                UI.display.clear()
-                UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
-                UI.display.set_cursor(cursor, 1)
+                self.display.clear()
+                self.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
+                self.display.set_cursor(cursor, 1)
                 time.sleep(0.2)
-            if UI.display.is_pressed(LCD.LEFT) and cursor > 0:
+            if self.display.is_pressed(LCD.LEFT) and cursor > 0:
                 cursor -= 1 # update cursor
-                # update UI.display bounds
+                # update self.display bounds
                 draw_from = min(cursor, draw_from)
-                draw_to = draw_from + UI.display._cols
+                draw_to = draw_from + self.display._cols
                 # update message
-                UI.display.clear()
-                UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
-                UI.display.set_cursor(cursor, 1)
+                self.display.clear()
+                self.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
+                self.display.set_cursor(cursor, 1)
                 time.sleep(0.2)
-            if UI.display.is_pressed(LCD.UP):
+            if self.display.is_pressed(LCD.UP):
                 current_char_idx = (chars.index(text[cursor])+1) % len(chars) # change selected charcter index
                 text[cursor] = chars[current_char_idx] # update text
                 # update message
-                UI.display.clear()
-                UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
-                UI.display.set_cursor(cursor, 1)
+                self.display.clear()
+                self.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
+                self.display.set_cursor(cursor, 1)
                 time.sleep(0.2)
-            if UI.display.is_pressed(LCD.DOWN):
+            if self.display.is_pressed(LCD.DOWN):
                 current_char_idx = (chars.index(text[cursor])-1) % len(chars) # change selected charcter index
                 text[cursor] = chars[current_char_idx] # update text
                 # update message
-                UI.display.clear()
-                UI.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
-                UI.display.set_cursor(cursor, 1)
+                self.display.clear()
+                self.display.message(message + "\n" + ''.join(text)[draw_from:min(draw_to,len(text))])
+                self.display.set_cursor(cursor, 1)
                 time.sleep(0.2)
 
-        UI.display.show_cursor(False) # stop displaying cursor, needed because others assume cursor is off
+        self.display.show_cursor(False) # stop displaying cursor, needed because others assume cursor is off
         time.sleep(0.2)
         return ''.join(text).strip() # remove whitespace

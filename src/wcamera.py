@@ -5,6 +5,7 @@ import time, os, json
 import Adafruit_CharLCD as LCD
 from menu import Menu
 from ui import UI
+from core import Core
 
 # Initialize the LCD
 lcd = LCD.Adafruit_CharLCDPlate()
@@ -24,11 +25,12 @@ if not os.path.exists(conf["directory"]):
     os.makedirs(conf["directory"])
 
 # define special chars
-Menu.init(lcd,conf_file)
+core = Core(conf)
+menu = Menu(lcd,conf_file,conf,core)
 
 # start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")
-submenu = Menu.main_menu
+submenu = menu.main_menu
 
 try:
     while hasattr(submenu, '__call__'):

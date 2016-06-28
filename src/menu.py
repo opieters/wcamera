@@ -21,124 +21,114 @@ class Menu:
                      (2, ( 0, 4, 0, 4, 0, 4, 0, 0)), # UP, SELECT, DOWN
                      (3, [ 4, 4,31, 4, 4, 0,31, 0])] # PM
 
-    @staticmethod
-    def init(display,conf_file):
-        UI.init(display,special_chars=Menu.special_chars)
-        Menu.conf_file = conf_file
-        Menu.conf = json.load(open(Menu.conf_file))
+    def __init__(self,display,conf_file,conf,core):
+        self.ui = UI(display,special_chars=self.special_chars)
+        self.conf_file = conf_file
+        self.conf = conf
+        self.core = core
 
-    @staticmethod
-    def main_menu():
-        menu_text = ("Record", "Settings", "Display", "System")
-        menu_call = (Menu.record_menu, Menu.settings_menu, Menu.display_menu, Menu.system_menu)
-        selected_entry = UI.select_from_list(menu_text)
+    def main_menu(self):
+        menu_text = ("Record", "Settings", "Server", "System")
+        menu_call = (self.record_menu, self.settings_menu, self.server_menu, self.system_menu)
+        selected_entry = self.ui.select_from_list(menu_text)
         return menu_call[selected_entry]
 
-    @staticmethod
-    def record_menu():
+    def record_menu(self):
         menu_text = ("Start PIR rec", "Start video rec", "Back")
-        selected_entry = UI.select_from_list(menu_text)
+        selected_entry = self.ui.select_from_list(menu_text)
         if selected_entry == 0:
             print("[INFO] Starting PIR recording.")
             PIR.init()
             PIR.run()
             PIR.delete()
             print("[INFO] PIR recording ended.")
-            return Menu.record_menu
+            return self.record_menu
         elif selected_entry == 1:
             print("[INFO] Starting video recording")
             #TODO
-            return Menu.record_menu
-        return Menu.main_menu
+            return self.record_menu
+        return self.main_menu
 
-    @staticmethod
-    def settings_menu():
+    def settings_menu(self):
         menu_text = ("Detection", "WiFi", "Update", "Back")
-        menu_call = (Menu.edit_detection_settings_menu, Menu.edit_wifi_menu, Menu.update_menu, Menu.main_menu)
-        selected_entry = UI.select_from_list(menu_text)
+        menu_call = (self.edit_detection_settings_menu, self.edit_wifi_menu, self.update_menu, self.main_menu)
+        selected_entry = self.ui.select_from_list(menu_text)
         return menu_call[selected_entry]
 
-    @staticmethod
-    def edit_detection_settings_menu():
+    def edit_detection_settings_menu(self):
         # display all dict entries for editing
-        UI.display_message("Select Done to\ncontinue")
-        conf_items = ["Done and quit"] + list(Menu.conf.keys())
-        selected = UI.select_from_list(conf_items,display_message="Select item",controls=False)
+        self.ui.display_message("Select Done to\ncontinue")
+        conf_items = ["Done and quit"] + list(self.conf.keys())
+        selected = self.ui.select_from_list(conf_items,display_message="Select item",controls=False)
         while selected != 0:
             key = conf_items[selected]
             print(key)
-            value = Menu.conf[key]
+            value = self.conf[key]
             if type(value) is bool:
-                Menu.conf[key] = bool(UI.question(message="New %s value" % key))
+                self.conf[key] = bool(self.ui.question(message="New %s value" % key))
             elif type(value) is int:
-                Menu.conf[key] = int(UI.enter_text(message="New %s value" % key,chars=Menu.numbers))
+                self.conf[key] = int(self.ui.enter_text(message="New %s value" % key,chars=Menu.numbers))
             elif type(value) is str:
-                Menu.conf[key] = UI.enter_text(message="New %s value" % key,chars=Menu.letters + Menu.numbers + Menu.symbols)
+                self.conf[key] = self.ui.enter_text(message="New %s value" % key,chars=Menu.letters + Menu.numbers + Menu.symbols)
             elif type(value) is list:
                 for i in range(len(value)):
-                    value[i] = int(UI.enter_text(message="New %s[%d] value" % (key,i),chars=Menu.numbers))
+                    value[i] = int(self.ui.enter_text(message="New %s[%d] value" % (key,i),chars=Menu.numbers))
             elif type(value) is float:
-                Menu.conf[key] = float(UI.enter_text(message="New %s value" % key, chars=Menu.numbers + ['.']))
-            selected = UI.select_from_list(conf_items,display_message="Select item",controls=False,pos=selected)
-        if UI.question("Save to file?",options=["Yes","No"]) == "Yes":
+                self.conf[key] = float(self.ui.enter_text(message="New %s value" % key, chars=Menu.numbers + ['.']))
+            selected = self.ui.select_from_list(conf_items,display_message="Select item",controls=False,pos=selected)
+        if self.ui.question("Save to file?",options=["Yes","No"]) == "Yes":
             with open(conf_file,'w') as f:
-                f.write(json.dump(Menu.conf))
-        return Menu.settings_menu
+                f.write(json.dump(self.conf))
+        return self.settings_menu
 
-    @staticmethod
-    def edit_usb_settigs_menu():
-        return Menu.settings_menu
+    def edit_usb_settigs_menu(self):
+        return self.settings_menu
 
-    @staticmethod
-    def edit_wifi_menu():
+    def edit_wifi_menu(self):
         # get all cells from the air
         menu_text = ("Current connection", "New connection", "Back")
-        menu_call = (Menu.current_wifi_connection, Menu.new_wifi_connection, Menu.settings_menu)
-        selected_entry = UI.select_from_list(menu_text)
+        menu_call = (self.current_wifi_connection, self.new_wifi_connection, self.settings_menu)
+        selected_entry = self.ui.select_from_list(menu_text)
         return menu_call[selected_entry]
 
-    @staticmethod
-    def current_wifi_connection():
-        UI.display_message("Please wait...")
-        message = "Connected" if Core.check_connection() else "Not connected"
-        UI.display_message(message)
-        return Menu.edit_wifi_menu
+    def current_wifi_connection(self):
+        self.ui.display_message("Please wait...")
+        message = "Connected" if self.core.check_connection() else "Not connected"
+        self.ui.display_message(message)
+        return self.edit_wifi_menu
 
-    @staticmethod
-    def new_wifi_connection():
+    def new_wifi_connection(self):
         ssids = [cell.ssid for cell in Cell.all('wlan0')]
         if len(ssids) > 0:
-            ssid = ssids[UI.select_from_list(ssids,display_message="Select SSID",controls=False)]
-        pwd = UI.enter_text("Enter SSID pwd",Menu.space+Menu.letters+Menu.numbers+Menu.symbols)
-        Core.setup_wifi_connection(ssid,pwd)
-        return Menu.edit_wifi_menu
+            ssid = ssids[self.ui.select_from_list(ssids,display_message="Select SSID",controls=False)]
+        pwd = self.ui.enter_text("Enter SSID pwd",Menu.space+Menu.letters+Menu.numbers+Menu.symbols)
+        self.core.setup_wifi_connection(ssid,pwd)
+        return self.edit_wifi_menu
 
-    @staticmethod
-    def update_menu():
-        home_dir = Menu.conf["home"]
-        message = "Updated" if Core.update(home_dir) else "Update failed"
-        UI.display_message(message)
-        return Menu.settings_menu
+    def update_menu(self):
+        home_dir = self.conf["home"]
+        message = "Updated" if self.core.update(home_dir) else "Update failed"
+        self.ui.display_message(message)
+        return self.settings_menu
 
-    @staticmethod
-    def usb_menu():
+    def usb_menu(self):
         menu_text = ("Back",)
-        menu_call = (Menu.main_menu,)
-        selected_entry = UI.select_from_list(menu_text)
+        menu_call = (self.main_menu,)
+        selected_entry = self.ui.select_from_list(menu_text)
         return menu_call[selected_entry]
 
-    @staticmethod
-    def display_menu():
-        menu_text = ("Back",)
-        menu_call = (Menu.main_menu,)
-        selected_entry = UI.select_from_list(menu_text)
-        return menu_call[selected_entry]
+    def server_menu(self):
+        self.core.start_server()
+        self.ui.display_message("Server running\nPush SELECT to quit")
+        print("STOP")
+        self.core.stop_server()
+        print("RET")
+        return self.main_menu
 
-    @staticmethod
-    def system_menu():
+    def system_menu(self):
         menu_text = ("Shut down", "Sleep", "Reboot", "Back")
-        menu_call = (None, Menu.no_menu, None, Menu.main_menu)
-        selected_entry = UI.select_from_list( menu_text)
+        menu_call = (None, self.no_menu, None, self.main_menu)
+        selected_entry = self.ui.select_from_list( menu_text)
         if selected_entry == 0:
             system("sudo halt")
             quit()
@@ -152,6 +142,5 @@ class Menu:
             quit()
         return menu_call[selected_entry]
 
-    @staticmethod
-    def no_menu():
-        return Menu.no_menu
+    def no_menu(self):
+        return self.no_menu
