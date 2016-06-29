@@ -1,4 +1,4 @@
-import urllib2, subprocess, os
+import urllib2, subprocess, os, json
 import SimpleHTTPServer
 import SocketServer
 from multiprocessing import Process
@@ -9,10 +9,9 @@ class Core:
     wifi_config_file = "/etc/wpa_supplicant/wpa_supplicant.conf"
 
     def __init__(self,conf_file):
-        self.conf = conf
         self.server = None
         self.conf_file = conf_file
-        self.conf = json.load(open(conf_file))
+        self.conf = json.load(open(self.conf_file))
 
     def setup_wifi_connection(self,ssid,psk):
         with open(Core.wifi_config_file,'a') as f:
@@ -114,28 +113,28 @@ class Core:
             self.conf["stop detection GPIO pin"] = -1
         if type(self.conf["camera LED"]) is not bool:
             self.conf["camera LED"] = False
-        if type(self.conf["annotations"]) is not :
+        if type(self.conf["annotations"]) is not bool:
             self.conf["annotations"] = False
         if type(self.conf["directory"]) is not str or os.path.isdir(self.conf["directory"]):
             self.conf["directory"] = "../detected/"
         if type(self.conf["home"]) is not str or os.path.isdir(self.conf["home"]):
-            self.conf["home"] = "/home/pi/
+            self.conf["home"] = "/home/pi/"
 
-    def self.update_trace(self):
+    def update_trace(self):
         # update trace number
         self.conf["trace"] = self.conf["trace"]+1
 
         # load possibly old configuration and update trace
-        file_conf = json.load(open(conf_file))
+        file_conf = json.load(open(self.conf_file))
         file_conf["trace"] = self.conf["trace"]
 
         # save updated configuration (without possible temp changed made in self.conf) to file
         with open(self.conf_file,'w') as f:
-            f.write(json.dump(file_conf["trace"]))
+            f.write(json.dumps(file_conf["trace"]))
 
     def save_conf(self):
         with open(self.conf_file,'w') as f:
-            f.write(json.dump(self.conf))
+            f.write(json.dumps(self.conf))
 
     def pir_recording(self):
         print("[INFO] Starting PIR recording.")
@@ -203,14 +202,14 @@ class Core:
             # data file
             data_file = {"picture_path": trace_name, "preview": preview, "pictures": pictures}
             with open(os.path.join(data_directory,"%s.yml" % trace_name,'w')) as f:
-                f.write(yaml.dump(data_file))
+                f.write(yaml.dumps(data_file))
 
             # overview entry
             preview = {"filename": pictures[0]["filename"], "original": pictures[0]["original"], "thumbnail": pictures[0]["thumbnail"]}
-            traces.append({"title": trace_name, "directory": directory, "preview:" preview})
+            traces.append({"title": trace_name, "directory": directory, "preview": preview})
 
         with open(os.path.join(data_directory,"overview.yml")) as f:
-            f.write(yaml.dump(traces))
+            f.write(yaml.dumps(traces))
 
     def generate_website(self):
         os.chdir(os.path.join(self.conf["home"],'wcamera/server/'))
