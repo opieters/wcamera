@@ -111,6 +111,7 @@ class Menu:
         return menu_call[selected_entry]
 
     def server_menu(self):
+        self.ui.display_message("Server init...\nPlease wait...",wait_for_input=False)
         self.core.start_server()
         self.ui.display_message("Server running\nPush SELECT to quit")
         print("STOP")

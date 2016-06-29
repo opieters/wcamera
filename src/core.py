@@ -1,9 +1,10 @@
-import urllib2, subprocess, os, json
+import urllib2, subprocess, os, json, yaml
 import SimpleHTTPServer
 import SocketServer
 from multiprocessing import Process
 from PIR import PIR
 from wand.image import Image
+from picamera import PiCamera, PiCameraError
 
 class Core:
     wifi_config_file = "/etc/wpa_supplicant/wpa_supplicant.conf"
@@ -12,6 +13,7 @@ class Core:
         self.server = None
         self.conf_file = conf_file
         self.conf = json.load(open(self.conf_file))
+        self.camera = PiCamera()
 
     def setup_wifi_connection(self,ssid,psk):
         with open(Core.wifi_config_file,'a') as f:
@@ -52,7 +54,7 @@ class Core:
     def start_server(self):
         self.server = Process(target=self.run_http_server)
         print("[INFO] Generating data files for galleries")
-        self.genearte_server_files()
+        self.generate_server_files()
         print("[INFO] Generating website with Jekyll")
         p = Process(target=self.generate_website)
         p.start()
@@ -123,26 +125,30 @@ class Core:
     def update_trace(self):
         # update trace number
         self.conf["trace"] = self.conf["trace"]+1
+        print(self.conf["trace"])
 
         # load possibly old configuration and update trace
         file_conf = json.load(open(self.conf_file))
+        print(file_conf)
         file_conf["trace"] = self.conf["trace"]
 
         # save updated configuration (without possible temp changed made in self.conf) to file
         with open(self.conf_file,'w') as f:
-            f.write(json.dumps(file_conf["trace"]))
+            json.dump(file_conf,f)
 
     def save_conf(self):
         with open(self.conf_file,'w') as f:
-            f.write(json.dumps(self.conf))
+            json.dump(self.conf,f)
 
     def pir_recording(self):
         print("[INFO] Starting PIR recording.")
         self.update_trace()
-        trace_suffix = "trace%d" % self.conf["trace"]
+        trace_suffix = "trace%d/" % self.conf["trace"]
         self.conf["directory"] = os.path.join(self.conf["directory"], trace_suffix)
-        os.makedirs(self.conf["directory"])
-        self.PIR = PIR(self.conf)
+        if not os.path.exists(self.conf["directory"]):
+            os.mkdir(self.conf["directory"])
+        print(self.conf["directory"])
+        self.PIR = PIR(self.camera,self.conf)
         self.PIR.run()
         self.PIR.delete()
         self.conf["directory"] = self.conf["directory"][:self.conf["directory"].rfind(trace_suffix)]
@@ -153,18 +159,17 @@ class Core:
         print("[INFO] Starting video recording")
         #TODO
 
-    def genearte_server_files(self):
+    def generate_server_files(self):
         d = self.conf["directory"]
         data_directory = os.path.join(self.conf["home"],'wcamera/server/_data')
         # check if data directory exists
         if not os.path.exists(data_directory):
             os.makedirs(data_directory)
 
-        trace_names = [os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
+        trace_directories = [os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
         traces = []
-        for trace_name in trace_names:
+        for directory in trace_directories:
             # find all image files in directory
-            directory = os.path.join(d,trace_name)
             images = []
             for f in os.listdir(directory):
                 if f.endswith(".jpg"): # Lichtfestival-0058-6000x4000.jpg
@@ -182,35 +187,43 @@ class Core:
                         scenes[filename] = {"original": image}
                 else:
                     if filename in scenes:
-                        scenes[filename]["thumbnail"] = thumbnail
+                        scenes[filename]["thumbnail"] = image
                     else:
-                        scenes[filename] = {"thumbnail": thumbnail}
+                        scenes[filename] = {"thumbnail": image}
 
             # find images without thumbnail and create it
             for scene in scenes:
                 if not "thumbnail" in scenes[scene]:
-                    with Image(filename=os.path.join(directory, image)) as img:
+                    with Image(filename=os.path.join(directory, image)) as i:
                         i.resize(480, 320)
                         i.save(filename=os.path.join(directory, '%s-thumbnail.jpg' % filename))
-                    scene["thumbnail"] = "%s-thumbnail.jpg" % filename
+                    scenes[scene]["thumbnail"] = "%s-thumbnail.jpg" % filename
             pictures = []
             for scene in scenes:
                 pictures.append({"filename": scene, "original": scenes[scene]["original"], "thumbnail": scenes[scene]["thumbnail"]})
 
             del scenes
 
-            # data file
-            data_file = {"picture_path": trace_name, "preview": preview, "pictures": pictures}
-            with open(os.path.join(data_directory,"%s.yml" % trace_name,'w')) as f:
-                f.write(yaml.dumps(data_file))
+            if directory[-1] == '/':
+                directory = directory[:-1]
+            trace_name = directory[directory.rfind('/')+1:]
 
             # overview entry
-            preview = {"filename": pictures[0]["filename"], "original": pictures[0]["original"], "thumbnail": pictures[0]["thumbnail"]}
-            traces.append({"title": trace_name, "directory": directory, "preview": preview})
+            if len(pictures) > 0:
+                preview = {"filename": pictures[0]["filename"], "original": pictures[0]["original"], "thumbnail": pictures[0]["thumbnail"]}
+                traces.append({"title": trace_name, "directory": directory, "preview": preview})
 
-        with open(os.path.join(data_directory,"overview.yml")) as f:
-            f.write(yaml.dumps(traces))
+                # data file
+                data_file = {"picture_path": trace_name, "preview": preview, "pictures": pictures}
+                with open(os.path.join(data_directory,"%s.yml" % trace_name),'w') as f:
+                    f.write(yaml.dump(data_file))
+
+        with open(os.path.join(data_directory,"overview.yml"),'w') as f:
+            f.write(yaml.dump(traces))
 
     def generate_website(self):
         os.chdir(os.path.join(self.conf["home"],'wcamera/server/'))
         subprocess.Popen("jekyll b",shell=True)
+
+    def delete(self):
+        self.camera.close()

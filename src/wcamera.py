@@ -23,7 +23,7 @@ menu = Menu(lcd,core)
 
 # check if frame/video save folder exists
 if not os.path.exists(core.conf["directory"]):
-    os.makedirs(core.conf["directory"])
+    os.mkdir(core.conf["directory"])
 
 # start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")
@@ -31,6 +31,9 @@ submenu = menu.main_menu
 
 try:
     while hasattr(submenu, '__call__'):
+        #core.generate_server_files()
         submenu = submenu()
 except KeyboardInterrupt:
     print("[INFO] KeyboardInterrupt, exiting...")
+
+core.delete()

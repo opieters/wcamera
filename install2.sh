@@ -53,9 +53,10 @@ ln -s /usr/local/lib/python2.7/site-packages/cv.py cv.py
 echo "Installing other dependencies for wcamera..."
 
 sudo apt-get update
-sudo apt-get install python-dev -y # -y installs missing headers
-sudo apt-get install python-smbus i2c-tools libmagickwand-dev jekyll # open cv + python bindings + i2c x
+sudo apt-get install ruby ruby-dev python-dev -y # -y installs missing headers
+sudo apt-get install python-smbus i2c-tools rubygems libmagickwand-dev python-picamera # open cv + python bindings + i2c x
 sudo pip install RPi.GPIO imutils picamera wifi Wand PyYAML
+sudo gem install jekyll
 
 echo "Attempting to automatically enable i2c"
 

@@ -44,10 +44,10 @@ class UI:
         time.sleep(0.2)
         return pos
 
-    def display_message(self,message):
+    def display_message(self,message,wait_for_input=True):
         self.display.clear()
         self.display.message(message)
-        while not self.display.is_pressed(LCD.SELECT):
+        while not self.display.is_pressed(LCD.SELECT) and wait_for_input:
             time.sleep(0.05)
         time.sleep(0.2)
 

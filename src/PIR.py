@@ -2,39 +2,30 @@
 
 import RPi.GPIO as GPIO
 import time, datetime, json, os
-from picamera import PiCamera, PiCameraError
+from picamera import PiCameraError
 from threading import Timer
 from argparse import ArgumentParser
 
 class PIR:
 
-    def __init__(self,conf):
+    def __init__(self,camera,conf):
         """Initialise module for recording with configuration file_conf or
         conf.json if unspecified.
         """
-        self.camera = PiCamera()
+        self.camera = camera
         self.conf = conf
 
-        self.run_complete = None
-        self.motion = None
-        self.recording = None
-        self.record_video = None
+        self.run_complete = False
+        self.motion = False
+        self.recording = False
+        self.record_video = self.conf["record video"]
         self.run_timer = None
         self.motion_timer =  None
         self.duration = None
 
-    def reset_variables(self):
-        """Reset all variables to default values."""
-
+        # set configuration of camera
         self.camera.resolution = tuple(self.conf["resolution"])
         self.camera.led = self.conf["camera LED"]
-        self.motion = False
-        self.run_complete = False
-        self.recording = False
-        self.record_video = self.conf["record video"]
-        self.run_timer = None
-        self.motion_timer = None
-        self.duration = None
 
     def motion_detected(self,file_name):
         """Callback if motion is detected. A video or still image will be created
@@ -105,8 +96,6 @@ class PIR:
     def run(self,duration=None):
         """Perform motion detecton."""
 
-        self.reset_variables()
-
         GPIO.setup(self.conf["PIR GPIO pin"], GPIO.IN) # register GPIO pin
 
         self.run_complete = False # run flag
@@ -150,23 +139,21 @@ class PIR:
         # if camera is still recording, stop it before deallocation
         if self.camera.recording:
             self.camera.stop_recording()
+            print('[INFO] Stopped recording.')
 
-        if (self.duration > 0) and (self.run_timer is not None):
+        if self.run_timer is not None:
             self.run_timer.cancel()
             self.run_timer.join()
+            print('[INFO] Cancelled run timer.')
 
         if self.motion_timer is not None:
-            print 'motion timer'
             self.motion_timer.cancel()
             self.motion_timer.join()
+            print('[INFO] Cancelled motion timer.')
 
         # clean GPIO pins
         GPIO.cleanup(self.conf["PIR GPIO pin"])
         if self.conf["stop detection GPIO pin"] >= 0:
             GPIO.cleanup(self.conf["stop detection GPIO pin"])
-
-        self.reset_variables()
-
-        self.camera.close() # release camera
 
         print("[INFO] Released objects")

@@ -3,10 +3,12 @@
 echo "[INFO] Installing dependencies (Python, OpenCV)"
 pushd ~
 sudo apt-get update
-sudo apt-get install python-dev -y # -y installs missing headers
+sudo apt-get install ruby ruby-dev python-dev -y # -y installs missing headers
 sudo apt-get install libopencv-dev python-opencv python-smbus i2c-tools # open cv + python bindings + i2c x
-sudo apt-get install python-pip libmagickwand-dev jekyll
+sudo apt-get install python-pip libmagickwand-dev rubygems python-picamera
 sudo pip install RPi.GPIO imutils picamera wifi Wand PyYAML
+sudo gem install jekyll
+
 echo "Attempting to automatically enable i2c"
 
 if [ -f /etc/modprobe.d/raspi-blacklist.conf ]; then
