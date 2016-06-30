@@ -18,7 +18,7 @@
     "stop detection GPIO pin": -1,
     "camera LED": false,
     "annotations": false,
-    "directory": "../server/assets/images/",
-    "home": "/home/pi/",
+    "directory": "server/assets/images/",
+    "home": "/home/pi/wcamera/",
     "trace": 1
 }

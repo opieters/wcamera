@@ -39,12 +39,12 @@ class Core:
         return True
 
     def run_http_server(self):
+        port = 4000
+        os.chdir(os.path.join(self.conf["home"],'server/_site'))
+        handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        print('[INFO] Staring server at port %d.' % port)
+        httpd = SocketServer.TCPServer(("", port), handler)
         try:
-            port = 4000
-            os.chdir(os.path.join(self.conf["home"],'wcamera/server/_site'))
-            handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-            print('[INFO] Staring server at port %d.' % port)
-            httpd = SocketServer.TCPServer(("", port), handler)
             httpd.serve_forever()
         finally:
             print('[INFO] Stopping server.')
@@ -120,7 +120,7 @@ class Core:
         if type(self.conf["directory"]) is not str or os.path.isdir(self.conf["directory"]):
             self.conf["directory"] = "../detected/"
         if type(self.conf["home"]) is not str or os.path.isdir(self.conf["home"]):
-            self.conf["home"] = "/home/pi/"
+            self.conf["home"] = "/home/pi/wcamera"
 
     def update_trace(self):
         # update trace number
@@ -160,13 +160,14 @@ class Core:
         #TODO
 
     def generate_server_files(self):
-        d = self.conf["directory"]
-        data_directory = os.path.join(self.conf["home"],'wcamera/server/_data')
+        image_directory = os.path.join(self.conf["home"], self.conf["directory"])
+        data_directory = os.path.join(self.conf["home"],'server/_data/')
+        html_directory = os.path.join(self.conf["home"],'server/gallery/')
         # check if data directory exists
         if not os.path.exists(data_directory):
             os.makedirs(data_directory)
 
-        trace_directories = [os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
+        trace_directories = [os.path.join(image_directory,d) for d in os.listdir(image_directory) if os.path.isdir(os.path.join(image_directory,d))]
         traces = []
         for directory in trace_directories:
             # find all image files in directory
@@ -196,8 +197,8 @@ class Core:
                 if not "thumbnail" in scenes[scene]:
                     with Image(filename=os.path.join(directory, image)) as i:
                         i.resize(480, 320)
-                        i.save(filename=os.path.join(directory, '%s-thumbnail.jpg' % filename))
-                    scenes[scene]["thumbnail"] = "%s-thumbnail.jpg" % filename
+                        i.save(filename=os.path.join(directory, '%s-thumbnail.jpg' % scene))
+                    scenes[scene]["thumbnail"] = "%s-thumbnail.jpg" % scene
             pictures = []
             for scene in scenes:
                 pictures.append({"filename": scene, "original": scenes[scene]["original"], "thumbnail": scenes[scene]["thumbnail"]})
@@ -208,21 +209,30 @@ class Core:
                 directory = directory[:-1]
             trace_name = directory[directory.rfind('/')+1:]
 
+            # html file
+            with open(os.path.join(html_directory,trace_name+".html"),'w') as f:
+                f.write("---\n")
+                f.write("layout: default\n")
+                f.write("title: %s\n\n" % trace_name)
+                f.write("---\n")
+                f.write("{% include gallery-layout.html gallery=site.data.galleries.san-francisco %}\n")
+
+
             # overview entry
             if len(pictures) > 0:
                 preview = {"filename": pictures[0]["filename"], "original": pictures[0]["original"], "thumbnail": pictures[0]["thumbnail"]}
-                traces.append({"title": trace_name, "directory": directory, "preview": preview})
+                traces.append({"title": trace_name, "directory": trace_name, "preview": preview})
 
                 # data file
                 data_file = {"picture_path": trace_name, "preview": preview, "pictures": pictures}
                 with open(os.path.join(data_directory,"%s.yml" % trace_name),'w') as f:
-                    f.write(yaml.dump(data_file))
+                    f.write(yaml.safe_dump(data_file))
 
         with open(os.path.join(data_directory,"overview.yml"),'w') as f:
-            f.write(yaml.dump(traces))
+            f.write(yaml.safe_dump(traces))
 
     def generate_website(self):
-        os.chdir(os.path.join(self.conf["home"],'wcamera/server/'))
+        os.chdir(os.path.join(self.conf["home"],'server/'))
         subprocess.Popen("jekyll b",shell=True)
 
     def delete(self):
