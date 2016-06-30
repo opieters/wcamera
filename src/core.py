@@ -201,9 +201,13 @@ class Core:
                     scenes[scene]["thumbnail"] = "%s-thumbnail.jpg" % scene
             pictures = []
             for scene in scenes:
-                pictures.append({"filename": scene, "original": scenes[scene]["original"], "thumbnail": scenes[scene]["thumbnail"]})
+                caption = scene[scene.find('-')+1:]
+                pictures.append({"filename": scene, "original": scenes[scene]["original"], "thumbnail": scenes[scene]["thumbnail"], "title": caption})
 
             del scenes
+
+            # sort pictures by date
+            pictures.sort(key=lambda x: x["title"])
 
             if directory[-1] == '/':
                 directory = directory[:-1]
@@ -215,7 +219,8 @@ class Core:
                 f.write("layout: default\n")
                 f.write("title: %s\n\n" % trace_name)
                 f.write("---\n")
-                f.write("{% include gallery-layout.html gallery=site.data.galleries.san-francisco %}\n")
+                f.write("{% include gallery-layout.html gallery=site.data."+trace_name+" %}\n")
+
 
 
             # overview entry
@@ -226,10 +231,10 @@ class Core:
                 # data file
                 data_file = {"picture_path": trace_name, "preview": preview, "pictures": pictures}
                 with open(os.path.join(data_directory,"%s.yml" % trace_name),'w') as f:
-                    f.write(yaml.safe_dump(data_file))
+                    f.write(yaml.safe_dump(data_file,default_flow_style=False))
 
         with open(os.path.join(data_directory,"overview.yml"),'w') as f:
-            f.write(yaml.safe_dump(traces))
+            f.write(yaml.safe_dump(traces,default_flow_style=False))
 
     def generate_website(self):
         os.chdir(os.path.join(self.conf["home"],'server/'))

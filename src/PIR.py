@@ -81,7 +81,7 @@ class PIR:
             if self.record_video:
                 self.motion_detected(os.path.join(self.conf["directory"], "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + ".h264"))
             else:
-                self.motion_detected(self.conf["directory"] + "motion-" + datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S") + "-%dx%d.jpg" % (self.conf["resolution"][0], self.conf["resolution"][1]))
+                self.motion_detected(self.conf["directory"] + "motion-" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "-%dx%d.jpg" % (self.conf["resolution"][0], self.conf["resolution"][1]))
         else: # falling
             self.no_motion()
 

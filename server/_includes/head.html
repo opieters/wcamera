@@ -6,6 +6,7 @@
   <title>{% if page.title %}{{ page.title | escape }}{% else %}{{ site.title | escape }}{% endif %}</title>
   <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
 
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/gallery.css" />
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/skeleton/css/skeleton.css" />
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/skeleton/css/normalize.css" />
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/slicknav/dist/slicknav.min.css" />

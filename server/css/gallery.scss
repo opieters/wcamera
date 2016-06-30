@@ -1,0 +1,55 @@
+---
+---
+
+$default-width: 50%;
+
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+/* force scrollbar, prevents initial gap */
+html {
+  overflow-y: scroll;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+img {
+  width:100%;
+}
+
+/* ---- isotope ---- */
+
+.image-gallery {
+  &:after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+}
+
+/* 5 columns, percentage width */
+.image-wrapper,
+.gallery-sizer {
+  width: $default-width;
+}
+
+.image-wrapper {
+  float: left;
+  padding: 3px;
+}
+
+.image {
+  width: 100.1%;
+  width: calc( 100% + 1px );
+  height: 100%;
+}
+
+.caption {
+  position: static;
+  color: #AAA;
+}
