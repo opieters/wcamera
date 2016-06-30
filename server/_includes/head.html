@@ -12,6 +12,14 @@
 
   <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}">
 
+  <script src="{{ site.baseurl }}/assets/jquery/dist/jquery.min.js"></script>
+  <script src="{{ site.baseurl }}/assets/slicknav/dist/jquery.slicknav.min.js"></script>
+  <script>
+    $(function(){
+        $('#menu').slicknav();
+    });
+  </script>
+
   <script src="{{ site.baseurl }}/assets/jquery-mousewheel/jquery.mousewheel.min.js"></script>
 
   <script src="{{ site.baseurl }}/assets/lightgallery/dist/js/lightgallery-all.min.js"></script>
