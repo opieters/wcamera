@@ -3,6 +3,17 @@ Wildlife detection
 
 A wildlife detection camera with Raspberry Pi. Either motion sensing based on the video stream (supported by OpenCV) or a PIR can be used to make wildlife images and videos.
 
+Hardware
+--------
+
+Hardware (yes, some of it has newer and better versions) that is used to test this project:
+
+* [character LCD display](https://www.adafruit.com/products/772)
+* [wifi dongle](http://www.edimax.com/edimax/merchandise/merchandise_detail/data/edimax/global/wireless_adapters_n150/ew-7811un)
+* [Raspberry Pi](https://www.raspberrypi.org/products/model-b/)
+* [PIR sensor](https://www.adafruit.com/products/189)
+* [NoIR camera](https://www.raspberrypi.org/products/pi-noir-camera/)
+
 Installation
 ------------
 
@@ -35,10 +46,16 @@ Open `raspi-config`, select Advanced Options (9) and enable I2C. Alternatively, 
 
 Before attempting to record anything, make sure you activated the camera in `raspi-config` and correctly connected the camera module to the Raspberry Pi board.
 
+### Hotspot (Access Point Mode)
+
+Setup access point mode using [this guide](http://elinux.org/RPI-Wireless-Hotspot), but do not apply the _at boot_ settings. These will be performed by the script.
+
+If you are using the EDIMAX wifi dongle, update Hostapd with the version in [this guide](http://www.daveconroy.com/turn-your-raspberry-pi-into-a-wifi-hotspot-with-edimax-nano-usb-ew-7811un-rtl8188cus-chipset/) (you can skip everything else in this guide). Be sure to chance the driver settings in the `/etc/hostapd/hostapd.conf` file to `driver=rtl871xdrv`. Otherwise this will not work.
+
 Usage
 -----
 
-TODO
+Run the script using `python wcamera.py` and use the provided UI on the character LCD and mobile UI.
 
 FAQ
 ---
