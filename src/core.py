@@ -35,7 +35,7 @@ class Core:
         connected = self.check_connection()
         if not connected:
             return False
-        subprocess.Popen('git pull origin master', cwd=os.path.join(home_dir, 'wcamera/'),shell=True)
+        subprocess.call('git pull origin master', cwd=os.path.join(home_dir, 'wcamera/'),shell=True)
         return True
 
     def run_http_server(self):
@@ -238,7 +238,12 @@ class Core:
 
     def generate_website(self):
         os.chdir(os.path.join(self.conf["home"],'server/'))
-        subprocess.Popen("jekyll b",shell=True)
+        subprocess.call("jekyll b",shell=True)
 
     def delete(self):
         self.camera.close()
+
+    def start_hotspot(self):
+        subprocess.call("sudo ifconfig wlan0 192.168.42.1",shell=True)
+        subprocess.call("sudo service hostapd start",shell=True)
+        subprocess.call("sudo service udhcpd start",shell=True)

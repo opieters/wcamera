@@ -23,7 +23,7 @@ menu = Menu(lcd,core)
 
 # check if frame/video save folder exists
 if not os.path.exists(os.path.join(core.conf["home"], core.conf["directory"])):
-    os.mkdir(os.path.join(core.conf["home"], core.conf["directory"]))
+    os.makedirs(os.path.join(core.conf["home"], core.conf["directory"]))
 
 # start program at main_menu
 print("[INFO] Press Ctrl-C to quit.")
