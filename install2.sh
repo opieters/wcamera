@@ -8,14 +8,14 @@ sudo apt-get upgrade
 sudo rpi-update
 
 echo "Installing essential tools"
-sudo apt-get install build-essential cmake pkg-config
-sudo apt-get install libjpeg-dev libtiff5-dev libjasper-dev libpng-dev
-sudo apt-get install libgtk2.0-dev
-sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
-sudo apt-get install libatlas-base-dev gfortran
+sudo apt-get -y install build-essential cmake pkg-config
+sudo apt-get -y install libjpeg-dev libtiff5-dev libjasper-dev libpng-dev
+sudo apt-get -y install libgtk2.0-dev
+sudo apt-get -y install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+sudo apt-get -y install libatlas-base-dev gfortran
 
 echo "Installing Python"
-sudo apt-get install python2.7-dev python-pip
+sudo apt-get -y install python2.7-dev python-pip
 
 echo "Installing Virtualenv"
 sudo pip install virtualenv virtualenvwrapper
@@ -53,8 +53,8 @@ ln -s /usr/local/lib/python2.7/site-packages/cv.py cv.py
 echo "Installing other dependencies for wcamera..."
 
 sudo apt-get update
-sudo apt-get install ruby ruby-dev python-dev -y # -y installs missing headers
-sudo apt-get install python-smbus i2c-tools rubygems libmagickwand-dev python-picamera # open cv + python bindings + i2c x
+sudo apt-get -y install ruby ruby-dev python-dev -y # -y installs missing headers
+sudo apt-get -y install python-smbus i2c-tools rubygems libmagickwand-dev python-picamera # open cv + python bindings + i2c x
 sudo pip install RPi.GPIO imutils picamera wifi Wand PyYAML
 sudo gem install jekyll
 
@@ -76,6 +76,10 @@ sudo python setup.py install
 echo "[INFO] Installed all dependencies"
 echo "[INFO] Tried to install I2C, if failed please check README. Please reboot NOW!"
 
+popd
+
+pushd ./server
+bower install
 popd
 
 echo "All done."

@@ -3,9 +3,9 @@
 echo "[INFO] Installing dependencies (Python, OpenCV)"
 pushd ~
 sudo apt-get update
-sudo apt-get install ruby ruby-dev python-dev -y # -y installs missing headers
-sudo apt-get install libopencv-dev python-opencv python-smbus i2c-tools # open cv + python bindings + i2c x
-sudo apt-get install python-pip libmagickwand-dev rubygems python-picamera
+sudo apt-get -y install ruby ruby-dev python-dev # -y installs missing headers
+sudo apt-get -y install libopencv-dev python-opencv python-smbus i2c-tools # open cv + python bindings + i2c x
+sudo apt-get -y install python-pip libmagickwand-dev rubygems python-picamera
 sudo pip install RPi.GPIO imutils picamera wifi Wand PyYAML
 sudo gem install jekyll
 
@@ -27,4 +27,8 @@ sudo python setup.py install
 echo "[INFO] Installed all dependencies"
 echo "[INFO] Tried to install I2C, if failed please check README. Please reboot NOW!"
 
+popd
+
+pushd ./server
+bower install
 popd
