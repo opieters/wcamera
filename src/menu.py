@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 # Example using a character LCD plate.
-import math, time, json, motion_detector
-import Adafruit_CharLCD as LCD
 from os import system
 from wifi import Cell, Scheme
 from ui import UI
@@ -38,7 +36,7 @@ class Menu:
             self.core.pir_recording()
             return self.record_menu
         elif selected_entry == 1:
-            self.code.video_recording()
+            self.core.video_recording()
             return self.record_menu
         return self.main_menu
 
@@ -127,10 +125,7 @@ class Menu:
             system("sudo halt")
             quit()
         elif selected_entry == 1:
-            display.clear()
-            display.set_color(0.0, 0.0, 0.0)
-            while not display.is_pressed(display.SELECT):
-                time.sleep(1)
+            self.ui.wait_for_input()
         elif selected_entry == 2:
             system("sudo reboot")
             quit()

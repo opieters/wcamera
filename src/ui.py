@@ -133,3 +133,9 @@ class UI:
         self.display.show_cursor(False) # stop displaying cursor, needed because others assume cursor is off
         time.sleep(0.2)
         return ''.join(text).strip() # remove whitespace
+
+    def wait_for_input(self):
+        self.display.clear()
+        self.display.set_color(0.0, 0.0, 0.0)
+        while not self.display.is_pressed(self.display.SELECT):
+            time.sleep(1)
