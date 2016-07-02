@@ -5,6 +5,7 @@ from multiprocessing import Process
 from PIR import PIR
 from wand.image import Image
 from picamera import PiCamera, PiCameraError
+from motion_detector import MD
 
 class Core:
     wifi_config_file = "/etc/wpa_supplicant/wpa_supplicant.conf"
@@ -157,7 +158,7 @@ class Core:
 
     def video_recording(self):
         print("[INFO] Starting video recording")
-        #TODO
+        md = MD(self.camera, self.conf)
 
     def generate_server_files(self):
         image_directory = os.path.join(self.conf["home"], self.conf["directory"])
