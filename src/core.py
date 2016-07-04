@@ -14,6 +14,7 @@ class Core:
         self.server = None
         self.conf_file = conf_file
         self.conf = json.load(open(self.conf_file))
+        self.tmp = {}
         self.camera = PiCamera()
 
     def setup_wifi_connection(self,ssid,psk):
@@ -248,3 +249,75 @@ class Core:
         subprocess.call("sudo ifconfig wlan0 192.168.42.1",shell=True)
         subprocess.call("sudo service hostapd start",shell=True)
         subprocess.call("sudo service udhcpd start",shell=True)
+
+    @staticmethod
+    def get_connected_devices():
+        output =  subprocess.check_output("sudo blkid",shell=True)
+        dev_list, devices = output.split('\n'), []
+        for dev in dev_list:
+            devices.append(dev[:dev.find(":")]) if ':' in dev else ''
+        return devices
+
+    def before_usb_inserted(self):
+        self.tmp["usb list"] = Core.get_connected_devices()
+
+    def copy_to_usb(self):
+        if "usb list" not in self.tmp:
+            print('[INFO] Unable to find usb device list before drive insertion.')
+            return False
+
+        data_path = os.path.join(self.conf["home"],'server/_data/')  # folder with traces
+        prev = self.tmp["usb list"]  # list of devices that were connected before drive was plugged in
+
+        devices = Core.get_connected_devices()  # get list of usb devices with drive
+
+        # find drive (assumed to be first newly connected device)
+        drive = None
+        for dev in devices:
+            if not dev in prev:
+                drive = dev
+                break
+        if drive is None:
+            print('[INFO] unable to find drive')
+            return False
+
+        # find a mountpoint
+        mount, cnt = "/media/usb", 0
+        while os.path.isdir(mount + str(cnt)):
+            cnt += 1
+
+        # mount device
+        mount = mount + str(cnt)
+        os.makedirs(mount)
+        subprocess.call('sudo mount %s %s' % (drive,mount), shell=True)
+
+        buffer_space = int(100*1e6) # 100MB free space
+
+        # get directory structure
+        dirs = [f for f in os.listdir(data_path) if os.path.isdir(os.path.join(data_path, f))]
+
+        # create directories
+        for d in dirs:
+            usb_dir = os.path.join(mount,d)
+            src_dir = os.path.join(data_path,d)
+            if not os.path.isdir(usb_dir):
+                os.mkdir(usb_dir)
+
+            files = [f for f in os.listdir(src_dir) if os.path.isfile(os.path.join(src_dir,f))]
+
+            for f in files:
+                file_dir = os.path.join(src_dir,f)
+
+                # get free space
+                statvfs = os.statvfs(mount)
+                free_space = statvfs.f_frsize * statvfs.f_bavail
+
+                # check if enough free space
+                if free_space > buffer_space and os.path.getsize(file_dir) < free_space:
+                    shutil.move(file_dir, os.path.join(usb_dir,f))
+                    print '[INFO] moved', f
+                else:
+                    print('[INFO] Not enough space')
+                    return False
+
+        return True

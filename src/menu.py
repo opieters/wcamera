@@ -72,9 +72,6 @@ class Menu:
             core.save_conf()
         return self.settings_menu
 
-    def edit_usb_settigs_menu(self):
-        return self.settings_menu
-
     def edit_wifi_menu(self):
         # get all cells from the air
         menu_text = ("Current connection", "New connection", "Back")
@@ -103,10 +100,14 @@ class Menu:
         return self.settings_menu
 
     def usb_menu(self):
-        menu_text = ("Back",)
-        menu_call = (self.main_menu,)
-        selected_entry = self.ui.select_from_list(menu_text)
-        return menu_call[selected_entry]
+        self.ui.display_message("Do NOT yet connect\n USB device!",wait_for_input=1.5)
+        self.core.before_usb_inserted()
+        self.ui.display_message("Connect USB\ndevice NOW.")
+        if self.core.copy_to_usb():
+            self.ui.display_message("Success.")
+        else:
+            self.ui.display_message("Warning or Error\noccured.")
+        return self.main_menu
 
     def server_menu(self):
         self.ui.display_message("Server init...\nPlease wait...",wait_for_input=False)

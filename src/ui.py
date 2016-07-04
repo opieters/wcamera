@@ -47,8 +47,11 @@ class UI:
     def display_message(self,message,wait_for_input=True):
         self.display.clear()
         self.display.message(message)
-        while not self.display.is_pressed(LCD.SELECT) and wait_for_input:
-            time.sleep(0.05)
+        if type(wait_for_input) is bool:
+            while not self.display.is_pressed(LCD.SELECT) and wait_for_input:
+                time.sleep(0.05)
+        elif type(wait_for_input) is float or type(wait_for_input) is int:
+            time.sleep(wait_for_input)
         time.sleep(0.2)
 
     def question(self,message,options=["True","False"],pos=0):
