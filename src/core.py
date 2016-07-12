@@ -69,69 +69,55 @@ class Core:
         print('[INFO] Server stopped.')
 
     def check_conf(self):
-        if type(self.conf["show video"]) is not bool:
-            self.conf["show video"] = False
-        if type(self.conf["min motion frames"]) is not int or self.conf["min motion frames"] > 0:
-            self.conf["min motion frames"] = 8
-        if type(self.conf["camera warmup time"]) is not float:
-            self.conf["camera warmup time"] = 2.5
-        if type(self.conf["motion threshold"]) is not int:
-            self.conf["motion threshold"] = 5
-        if type(self.conf["detection resolution"]) is not list or len(self.conf["detection resolution"]) != 2:
-            self.conf["detection resolution"] = [640, 480]
+        default_conf = {"show video": (False,),
+            "min motion frames": (8,),
+            "camera warmup time": (2.5,0,None),
+            "motion threshold": (5,1,255),
+            "detection resolution": ([640, 480], [1,1], [2592,1944]),
+            "record video": (False,),
+            "resolution": ([640, 480], [1,1], [2592,1944]),
+            "fps": (16.0,0.0,30.0),
+            "motion min area": (500,1,5038848),
+            "detection width": (500,1,2592),
+            "motion blur kernel size": ([21,21],[1,1],[2592,1944]),
+            "motion blur std x": (0,),
+            "motion dection average weight": (0.5,0.001,1.0),
+            "motion delay": (10.0,0.0,None),
+            "duration": (1000,0,None),
+            "PIR GPIO pin": (14),
+            "stop detection GPIO pin": (-1,-1,None),
+            "camera LED": False,
+            "annotations": False,
+            "directory": "server/assets/images/",
+            "home": "/home/pi/wcamera/",
+            "trace": (1,0,None)}
+        for i in default_conf:
+            if i in self.conf:
+                if len(default_conf[i]) == 3:
+                    self.conf[i] = self.check_conf_helper(i,default_conf[i][0],default_conf[i][1],default_conf[i][2])
+                else:
+                    self.conf[i] = self.check_conf_helper(i,default_conf[i])
+            else:
+                self.conf[i] = self.default_conf[i]
+
+    def check_conf_helper(self,key,default_value,min_value=None,max_value=None):
+        value = self.conf[key]
+        value_type = type(value)
+        if type(value) is not value_type:
+            return default_value
         else:
-            s = self.conf["detection resolution"]
-            s[0] = min(2592,s[0])
-            s[1] = min(1944,s[1])
-        if type(self.conf["record video"]) is not bool:
-            self.conf["record video"] = False
-        if type(self.conf["resolution"]) is not list or len(self.conf["detection resolution"]) != 2:
-            self.conf["resolution"] = [640, 480]
-        else:
-            s = self.conf["resolution"]
-            s[0] = min(2592,s[0])
-            s[1] = min(1944,s[1])
-        if type(self.conf["fps"]) is not int:
-            self.conf["fps"] = 16
-        if type(self.conf["motion min area"]) is not int:
-            self.conf["motion min area"] = 500
-        if type(self.conf["detection width"]) is not int:
-            self.conf["detection width"] = 500
-        if type(self.conf["motion blur kernel size"]) is not list or len(self.conf["detection resolution"]) != 2:
-            self.conf["motion blur kernel size"] = [21,21]
-        else:
-            s = self.conf["motion blur kernel size"]
-            s[0] = min(s[0],self.conf["detection resolution"][0])
-            s[1] = min(s[1],self.conf["detection resolution"][1])
-        if type(self.conf["motion blur std x"]) is not int:
-            self.conf["motion blur std x"] = 0
-        if type(self.conf["motion dection average weight"]) is not float:
-            self.conf["motion dection average weight"] = 0.5
-        if type(self.conf["motion delay"]) is not int:
-            self.conf["motion delay"] = 10
-        if type(self.conf["duration"]) is not int:
-            self.conf["duration"] = 1000
-        if type(self.conf["PIR GPIO pin"]) is not int:
-            self.conf["PIR GPIO pin"] = 14
-        if type(self.conf["stop detection GPIO pin"]) is not int:
-            self.conf["stop detection GPIO pin"] = -1
-        if type(self.conf["camera LED"]) is not bool:
-            self.conf["camera LED"] = False
-        if type(self.conf["annotations"]) is not bool:
-            self.conf["annotations"] = False
-        if type(self.conf["directory"]) is not str or os.path.isdir(self.conf["directory"]):
-            self.conf["directory"] = "../detected/"
-        if type(self.conf["home"]) is not str or os.path.isdir(self.conf["home"]):
-            self.conf["home"] = "/home/pi/wcamera"
+            if min_value is not None and value < min_value:
+                return min_value
+            if max_value is not None and value > max_value:
+                return max_value
+            return value
 
     def update_trace(self):
         # update trace number
         self.conf["trace"] = self.conf["trace"]+1
-        print(self.conf["trace"])
 
         # load possibly old configuration and update trace
         file_conf = json.load(open(self.conf_file))
-        print(file_conf)
         file_conf["trace"] = self.conf["trace"]
 
         # save updated configuration (without possible temp changed made in self.conf) to file
@@ -146,14 +132,15 @@ class Core:
         print("[INFO] Starting PIR recording.")
         self.update_trace()
         trace_suffix = "trace%d/" % self.conf["trace"]
-        self.conf["directory"] = os.path.join(self.conf["directory"], trace_suffix)
+        self.conf["directory"] = os.path.join(self.conf["home"], self.conf["directory"], trace_suffix)
         if not os.path.exists(self.conf["directory"]):
             os.mkdir(self.conf["directory"])
-        print(self.conf["directory"])
         self.PIR = PIR(self.camera,self.conf)
-        self.PIR.run()
+        self.PIR.run(self.tmp["STOP_FN"], self.tmp["STOP_BT"])
         self.PIR.delete()
-        self.conf["directory"] = self.conf["directory"][:self.conf["directory"].rfind(trace_suffix)]
+        idx_end_home_dir = self.conf["directory"].find(self.conf["home"])+len(self.conf["home"])
+        idx_start_trace = self.conf["directory"].rfind(trace_suffix)
+        self.conf["directory"] = self.conf["directory"][idx_end_home_dir:idx_start_trace]
         self.PIR = None
         print("[INFO] PIR recording ended.")
 
