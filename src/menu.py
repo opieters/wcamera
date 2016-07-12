@@ -33,7 +33,12 @@ class Menu:
         menu_text = ("Start PIR rec", "Start video rec", "Back")
         selected_entry = self.ui.select_from_list(menu_text)
         if selected_entry == 0:
+            self.ui.backlight(False)
             self.core.pir_recording()
+            self.ui.backlight(True)
+            # wait till button released
+            while self.core.tmp["STOP_FN"](self.core.tmp["STOP_BT"]):
+                pass
             return self.record_menu
         elif selected_entry == 1:
             self.core.video_recording()
