@@ -93,7 +93,7 @@ class PIR:
 
         print("[INFO] Run timer callback: stop recording")
 
-    def run(self,duration=None):
+    def run(self,stop_function,stop_button,duration=None):
         """Perform motion detecton."""
 
         GPIO.setup(self.conf["PIR GPIO pin"], GPIO.IN) # register GPIO pin
@@ -125,8 +125,9 @@ class PIR:
                 GPIO.add_event_detect(self.conf["stop detection GPIO pin"], GPIO.BOTH, callback=self.run_timer_callback)
 
             # keep function alive and check every 3 seconds if the script needs to stop
-            while not self.run_complete:
+            while (not self.run_complete) and (not stop_function(stop_button)):
                 time.sleep(3)
+                print(stop_function(stop_button))
 
         except KeyboardInterrupt:
             print("[INFO] Motion detection ended.")
