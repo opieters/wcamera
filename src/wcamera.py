@@ -16,10 +16,12 @@ lcd.clear()
 lcd.message("Please wait...")
 time.sleep(1)
 
-# define special chars
 core = Core("conf.json") # configuration file
 menu = Menu(lcd,core)
 
+# pass stop condition for recording
+core.tmp["STOP_FN"] = menu.ui.display.is_pressed
+core.tmp["STOP_BT"] = LCD.SELECT
 
 # check if frame/video save folder exists
 if not os.path.exists(os.path.join(core.conf["home"], core.conf["directory"])):
