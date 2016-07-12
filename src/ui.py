@@ -142,3 +142,9 @@ class UI:
         self.display.set_color(0.0, 0.0, 0.0)
         while not self.display.is_pressed(self.display.SELECT):
             time.sleep(1)
+
+    def backlight(self,mode):
+        if mode == True:
+            self.display.set_backlight(1);
+        else:
+            self.display.set_backlight(0);
