@@ -1,7 +1,7 @@
 Wildlife detection
 ==================
 
-A wildlife detection camera with Raspberry Pi. Either motion sensing based on the video stream (supported by OpenCV) or a PIR can be used to make wildlife images and videos.
+A wildlife detection camera with Raspberry Pi. Either motion sensing based on the video stream (using OpenCV) or a PIR can be used to make wildlife images and videos.
 
 Hardware
 --------
